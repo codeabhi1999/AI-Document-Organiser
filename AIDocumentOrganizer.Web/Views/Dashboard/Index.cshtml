@@ -1,154 +1,237 @@
 @model AIDocumentOrganizer.Web.ViewModels.DashboardViewModel
 @using AIDocumentOrganizer.Web.Models.Enums
 @{
-    ViewData["Title"] = "Dashboard";
-    ViewData["PageTitle"] = "Dashboard";
+    ViewData["Title"] = "Dashboard — DocVault";
+    ViewData["PageTitle"] = "Intelligent Vault Dashboard";
 }
 
-<!-- Stats Row -->
+<!-- Welcome Banner -->
+<div class="dashboard-banner mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge badge-ai-pulse"><i class="bi bi-shield-fill-check me-1"></i>VAULT SECURE</span>
+                <span class="text-secondary small">· @DateTime.UtcNow.ToString("dddd, dd MMMM yyyy")</span>
+            </div>
+            <h3 class="dashboard-greeting mb-1">Welcome back to your <span class="gradient-text">Personal Vault</span></h3>
+            <p class="dashboard-sub-text mb-0">Your documents are continuously analyzed for expiration risks and policy compliance.</p>
+        </div>
+        <div class="d-flex gap-2">
+            <a asp-controller="AiAssistant" asp-action="Index" class="btn btn-glass-secondary">
+                <i class="bi bi-robot text-primary me-1"></i>Ask AI Assistant
+            </a>
+            <a asp-controller="Documents" asp-action="Upload" class="btn btn-gradient-primary shadow-glow">
+                <i class="bi bi-cloud-arrow-up-fill me-1"></i>Upload Document
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Cards -->
 <div class="row g-4 mb-4">
-    @{
-        var stats = new[]
-        {
-            new { Label = "Total Documents",       Value = Model.TotalDocuments.ToString(),    Icon = "bi-folder2-open",   Bg = "rgba(67,97,238,0.15)",  Color = "#7b8eff" },
-            new { Label = "Expiring in 30 Days",   Value = Model.ExpiringThisMonth.ToString(), Icon = "bi-clock-history",  Bg = "rgba(244,162,97,0.15)", Color = "#f4a261" },
-            new { Label = "Expired Documents",     Value = Model.ExpiredDocuments.ToString(),  Icon = "bi-exclamation-triangle", Bg = "rgba(230,57,70,0.15)", Color = "#e63946" },
-            new { Label = "Added This Month",      Value = Model.AddedThisMonth.ToString(),    Icon = "bi-calendar-plus",  Bg = "rgba(46,196,182,0.15)", Color = "#2ec4b6" },
-        };
-    }
-    @foreach (var s in stats)
-    {
-        <div class="col-6 col-xl-3">
-            <div class="stat-card">
-                <div class="stat-icon" style="background:@s.Bg; color:@s.Color;">
-                    <i class="@s.Icon"></i>
+    <div class="col-6 col-xl-3">
+        <div class="modern-stat-card card-primary">
+            <div class="stat-icon-glow">
+                <i class="bi bi-folder2-open"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <span class="stat-title">Total Vault Documents</span>
                 </div>
-                <div>
-                    <div class="stat-value">@s.Value</div>
-                    <div class="stat-label">@s.Label</div>
+                <div class="stat-number">@Model.TotalDocuments</div>
+                <div class="stat-trend text-primary">
+                    <i class="bi bi-shield-check me-1"></i>Encrypted & Stored
                 </div>
             </div>
         </div>
-    }
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="modern-stat-card card-warning">
+            <div class="stat-icon-glow">
+                <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <span class="stat-title">Expiring in 30 Days</span>
+                </div>
+                <div class="stat-number text-warning">@Model.ExpiringThisMonth</div>
+                <div class="stat-trend text-warning">
+                    <i class="bi bi-bell-fill me-1"></i>Reminders Active
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="modern-stat-card card-danger">
+            <div class="stat-icon-glow">
+                <i class="bi bi-exclamation-octagon-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <span class="stat-title">Expired Documents</span>
+                </div>
+                <div class="stat-number text-danger">@Model.ExpiredDocuments</div>
+                <div class="stat-trend text-danger">
+                    <i class="bi bi-arrow-repeat me-1"></i>Renewal Needed
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-xl-3">
+        <div class="modern-stat-card card-success">
+            <div class="stat-icon-glow">
+                <i class="bi bi-plus-circle-fill"></i>
+            </div>
+            <div class="stat-content">
+                <div class="stat-header">
+                    <span class="stat-title">Added This Month</span>
+                </div>
+                <div class="stat-number text-success">@Model.AddedThisMonth</div>
+                <div class="stat-trend text-success">
+                    <i class="bi bi-graph-up-arrow me-1"></i>Recent Uploads
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
+<!-- Main Dashboard Grid -->
 <div class="row g-4">
-    <!-- Upcoming Expiries -->
+    <!-- Upcoming Expiries Watchlist -->
     <div class="col-lg-7">
-        <div class="doc-card h-100">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-clock-history text-warning me-2"></i>Upcoming Expiries</h5>
-                <a asp-controller="Documents" asp-action="Expiring" style="font-size:13px; color:var(--text-link);">View all</a>
+        <div class="modern-dashboard-card h-100">
+            <div class="card-header-modern">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="header-icon-box bg-warning-subtle text-warning">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div>
+                        <h5 class="header-title mb-0">Upcoming Expiry Watchlist</h5>
+                        <small class="text-secondary">Track validity timelines and scheduled alerts</small>
+                    </div>
+                </div>
+                <a asp-controller="Documents" asp-action="Expiring" class="btn btn-link-subtle">
+                    View All <i class="bi bi-arrow-right ms-1"></i>
+                </a>
             </div>
 
-            @if (!Model.UpcomingExpiries.Any())
-            {
-                <div class="text-center py-4">
-                    <i class="bi bi-check-circle-fill" style="font-size:36px; color:#2ec4b6;"></i>
-                    <p class="mt-2 mb-0" style="font-size:14px; color:var(--text-secondary);">No upcoming expiries. All documents are up to date!</p>
-                </div>
-            }
-            else
-            {
-                <div class="d-flex flex-column gap-2">
-                    @foreach (var doc in Model.UpcomingExpiries)
-                    {
-                        var days = doc.DaysRemaining;
-                        var daysClass = days < 0 ? "days-expired" : days <= 15 ? "days-expiring" : "days-valid";
-                        var daysText = days < 0 ? Math.Abs(days ?? 0) + "d ago" : (days == 0 ? "TODAY" : days + "d");
-                        <div class="expiry-row">
-                            <div class="expiry-days @daysClass">
-                                <div style="font-size:11px; font-weight:500; opacity:0.7;">@(days < 0 ? "Expired" : "Expires")</div>
-                                <div>@daysText</div>
-                            </div>
-                            <div style="flex:1; min-width:0;">
-                                <div class="doc-title" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@doc.Title</div>
-                                <div class="doc-meta">@doc.DocumentType @(doc.CategoryName != null ? "· " + doc.CategoryName : "")</div>
-                                @if (doc.ExpiryDate.HasValue)
-                                {
-                                    <div class="doc-meta mt-1"><i class="bi bi-calendar3 me-1"></i>@doc.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
-                                }
-                            </div>
-                            <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="doc-action-btn" title="View">
-                                <i class="bi bi-arrow-right"></i>
-                            </a>
+            <div class="card-body-modern">
+                @if (!Model.UpcomingExpiries.Any())
+                {
+                    <div class="empty-state-modern py-5 text-center">
+                        <div class="empty-icon-circle mb-3 mx-auto">
+                            <i class="bi bi-patch-check-fill text-success"></i>
                         </div>
-                    }
-                </div>
-            }
+                        <h6 class="text-white mb-1">Zero Imminent Expirations</h6>
+                        <p class="text-secondary small max-w-400 mx-auto mb-3">
+                            All your vaulted identity and policy documents are healthy and up to date!
+                        </p>
+                        <a asp-controller="Documents" asp-action="Upload" class="btn btn-outline-primary btn-sm">
+                            <i class="bi bi-plus-lg me-1"></i>Upload Another Document
+                        </a>
+                    </div>
+                }
+                else
+                {
+                    <div class="expiry-watchlist-list">
+                        @foreach (var doc in Model.UpcomingExpiries)
+                        {
+                            var days = doc.DaysRemaining;
+                            var isUrgent = days <= 7;
+                            var isExpired = days < 0;
+                            var badgeClass = isExpired ? "badge-danger-glow" : (isUrgent ? "badge-warning-pulse" : "badge-info-subtle");
+
+                            <div class="watchlist-item">
+                                <div class="watchlist-countdown @badgeClass">
+                                    <span class="countdown-label">@(isExpired ? "EXPIRED" : "DUE IN")</span>
+                                    <span class="countdown-val">@(isExpired ? $"{Math.Abs(days ?? 0)}d ago" : (days == 0 ? "TODAY" : $"{days}d"))</span>
+                                </div>
+
+                                <div class="watchlist-info">
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h6 class="watchlist-title mb-0 text-truncate">@doc.Title</h6>
+                                        @if (!string.IsNullOrEmpty(doc.CategoryName))
+                                        {
+                                            <span class="category-tag-sm">@doc.CategoryName</span>
+                                        }
+                                    </div>
+                                    <div class="watchlist-meta">
+                                        <span class="me-3"><i class="bi bi-file-earmark-text me-1"></i>@doc.DocumentType</span>
+                                        @if (doc.ExpiryDate.HasValue)
+                                        {
+                                            <span><i class="bi bi-calendar3 me-1 text-warning"></i>Expires: @doc.ExpiryDate.Value.ToString("dd MMM yyyy")</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="watchlist-actions">
+                                    <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="btn-action-icon" title="View Document">
+                                        <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
         </div>
     </div>
 
-    <!-- Documents by Category -->
+    <!-- Right Side: Category Breakdown & Quick AI Launcher -->
     <div class="col-lg-5">
-        <div class="doc-card mb-4">
-            <h5 class="mb-3 fw-600" style="font-size:15px;"><i class="bi bi-pie-chart me-2" style="color:var(--primary);"></i>By Category</h5>
-            <div id="categoryBars">
-                <p class="text-center" style="font-size:13px; color:var(--text-muted);">No documents yet.</p>
+        <!-- Category Distribution -->
+        <div class="modern-dashboard-card mb-4">
+            <div class="card-header-modern">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="header-icon-box bg-primary-subtle text-primary">
+                        <i class="bi bi-pie-chart-fill"></i>
+                    </div>
+                    <div>
+                        <h5 class="header-title mb-0">Document Breakdown</h5>
+                        <small class="text-secondary">Distribution across categories</small>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body-modern">
+                <div id="categoryBars">
+                    <div class="text-center py-4 text-secondary small">
+                        <i class="bi bi-folder-x fs-3 d-block mb-2 text-muted"></i>
+                        No categorized documents yet. Upload a file to see automatic distribution.
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Quick Upload CTA -->
-        <div class="doc-card" style="background:linear-gradient(135deg, rgba(67,97,238,0.12), rgba(114,9,183,0.12)); border-color:rgba(67,97,238,0.25);">
-            <div class="text-center py-2">
-                <i class="bi bi-cloud-upload-fill" style="font-size:36px; color:var(--primary);"></i>
-                <h6 class="mt-2 mb-1" style="font-weight:600;">Upload a Document</h6>
-                <p class="mb-3" style="font-size:13px; color:var(--text-secondary);">AI will automatically classify and extract all key info.</p>
-                <a asp-controller="Documents" asp-action="Upload" class="btn btn-primary btn-sm px-4">
-                    <i class="bi bi-plus-lg me-1"></i>Upload Now
-                </a>
+        <!-- AI Assistant Mini-Prompt Card -->
+        <div class="ai-prompter-card">
+            <div class="d-flex align-items-start gap-3">
+                <div class="ai-prompter-avatar">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h6 class="text-white fw-bold mb-0">Ask Your Documents</h6>
+                        <span class="badge badge-ai-pulse" style="font-size: 9px;">AI RAG</span>
+                    </div>
+                    <p class="text-secondary small mb-3">
+                        Query your policies, find identity numbers, or calculate expiry dates in plain English.
+                    </p>
+                    <div class="prompt-chips-container mb-3">
+                        <a asp-controller="AiAssistant" asp-action="Index" class="prompt-chip-pill">
+                            "When does my vehicle insurance expire?"
+                        </a>
+                        <a asp-controller="AiAssistant" asp-action="Index" class="prompt-chip-pill">
+                            "What is my passport number?"
+                        </a>
+                    </div>
+                    <a asp-controller="AiAssistant" asp-action="Index" class="btn btn-outline-primary btn-sm w-100">
+                        <i class="bi bi-chat-dots-fill me-1"></i>Launch AI Assistant Chat
+                    </a>
+                </div>
             </div>
         </div>
     </div>
 </div>
-
-<!-- Recent Uploads -->
-@if (Model.RecentUploads.Any())
-{
-    <div class="mt-4">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-clock me-2" style="color:var(--primary);"></i>Recent Uploads</h5>
-            <a asp-controller="Documents" asp-action="Index" style="font-size:13px; color:var(--text-link);">View all</a>
-        </div>
-        <div class="doc-grid">
-            @foreach (var doc in Model.RecentUploads)
-            {
-                var statusCls = doc.ExpiryStatus switch {
-                    ExpiryStatus.Expired => "badge-expired",
-                    ExpiryStatus.ExpiringSoon => "badge-expiring",
-                    ExpiryStatus.Lifetime => "badge-lifetime",
-                    _ => "badge-valid"
-                };
-                var statusLabel = doc.ExpiryStatus switch {
-                    ExpiryStatus.Expired => "Expired",
-                    ExpiryStatus.ExpiringSoon => doc.DaysRemaining + "d left",
-                    ExpiryStatus.Lifetime => "Lifetime",
-                    _ => "Valid"
-                };
-                <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="doc-card text-decoration-none" style="display:block;">
-                    <div class="d-flex align-items-start gap-3">
-                        <div class="doc-type-icon" style="background:@(doc.CategoryColor != null ? doc.CategoryColor + "25" : "rgba(67,97,238,0.15)"); color:@(doc.CategoryColor ?? "#7b8eff");">
-                            <i class="@(doc.CategoryIcon ?? "bi-file-earmark")"></i>
-                        </div>
-                        <div style="flex:1; min-width:0;">
-                            <div class="doc-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@doc.Title</div>
-                            <div class="doc-meta">@doc.DocumentType</div>
-                            <div class="mt-2">
-                                <span class="badge-status @statusCls"><span class="expiry-dot dot-@(doc.ExpiryStatus.ToString().ToLower())"></span> @statusLabel</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="doc-meta mt-2"><i class="bi bi-calendar3 me-1"></i>Uploaded @doc.CreatedAt.ToString("dd MMM yyyy")</div>
-                </a>
-            }
-        </div>
-    </div>
-}
-
-@section Scripts {
-<script>
-    drawCategoryBars(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(
-        Model.CategoryStats.Select(c => new { name = c.Name, count = c.Count, color = c.ColorCode })
-    )));
-</script>
-}
