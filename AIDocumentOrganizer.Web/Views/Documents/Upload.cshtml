@@ -1,0 +1,99 @@
+@model AIDocumentOrganizer.Web.ViewModels.DocumentUploadViewModel
+@{
+    ViewData["Title"] = "Upload Document";
+    ViewData["PageTitle"] = "Upload Document";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form asp-action="Upload" method="post" enctype="multipart/form-data" id="uploadForm">
+            @Html.AntiForgeryToken()
+
+            <!-- Drop Zone -->
+            <div class="drop-zone mb-4" id="dropZone">
+                <div class="drop-icon"><i class="bi bi-cloud-upload-fill"></i></div>
+                <h5>Drag & Drop your document here</h5>
+                <p>or click to browse · PDF, JPG, PNG · Max 15 MB</p>
+                <input type="file" id="fileInput" name="File" accept=".pdf,.jpg,.jpeg,.png" class="d-none" />
+            </div>
+
+            <!-- File Preview -->
+            <div class="alert alert-success d-none mb-4" id="filePreview" style="background:rgba(46,196,182,0.1); border-color:rgba(46,196,182,0.3); color:#2ec4b6; border-radius:10px;">
+                <div class="d-flex align-items-center gap-3">
+                    <i class="bi bi-file-earmark-check-fill fs-4"></i>
+                    <div>
+                        <div class="fw-600" id="fileName" style="font-size:14px;"></div>
+                        <div style="font-size:12px; opacity:0.8;" id="fileSize"></div>
+                    </div>
+                    <button type="button" class="btn-close ms-auto" onclick="document.getElementById('filePreview').classList.add('d-none'); document.getElementById('dropZone').classList.remove('has-file');"></button>
+                </div>
+            </div>
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+            <!-- Document Details -->
+            <div class="detail-section">
+                <h5><i class="bi bi-info-circle me-2"></i>Document Details</h5>
+
+                <div class="mb-3">
+                    <label asp-for="Title" class="form-label">Document Title <span class="text-danger">*</span></label>
+                    <input asp-for="Title" class="form-control" placeholder="e.g. Aadhaar Card, Vehicle Insurance 2026..." />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="CategoryId" class="form-label">Category <span style="color:var(--text-muted); font-size:12px;">(AI will auto-detect)</span></label>
+                    <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+                        <option value="">-- Let AI classify automatically --</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- AI Note -->
+            <div class="alert alert-info d-flex gap-3 align-items-start" style="background:rgba(76,201,240,0.1); border-color:rgba(76,201,240,0.3); color:#4cc9f0; border-radius:12px;">
+                <i class="bi bi-robot fs-5 mt-1 flex-shrink-0"></i>
+                <div>
+                    <div class="fw-600 mb-1">AI Processing</div>
+                    <div style="font-size:13px; opacity:0.85;">After upload, our AI will automatically extract the document number, holder name, issue/expiry dates, and classify the document type. You'll be able to review and edit all extracted information.</div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-primary flex-grow-1 py-2" id="uploadBtn">
+                    <i class="bi bi-cloud-upload me-2"></i>Upload & Analyze with AI
+                </button>
+                <a asp-action="Index" class="btn btn-outline-secondary py-2 px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tips Sidebar -->
+    <div class="col-lg-4 d-none d-lg-block">
+        <div class="detail-section">
+            <h5><i class="bi bi-lightbulb me-2" style="color:#f4a261;"></i>Tips for Best Results</h5>
+            <ul style="font-size:13px; color:var(--text-secondary); padding-left:20px; line-height:1.8;">
+                <li>Ensure text is clearly visible and not blurry</li>
+                <li>For physical documents, scan at 300 DPI or higher</li>
+                <li>Avoid shadows and reflections on the document</li>
+                <li>Upload the full document including borders</li>
+                <li>Supported: PDF (digital/scanned), JPG, PNG</li>
+            </ul>
+        </div>
+        <div class="detail-section mt-3">
+            <h5><i class="bi bi-shield-check me-2" style="color:#2ec4b6;"></i>Security</h5>
+            <p style="font-size:13px; color:var(--text-secondary); line-height:1.7; margin-bottom:0;">
+                Your files are stored in an encrypted, non-public directory. Document numbers are encrypted using AES-256 and only masked versions are displayed in the UI.
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('uploadForm').addEventListener('submit', function() {
+        const btn = document.getElementById('uploadBtn');
+        btn.innerHTML = '<i class="bi bi-hourglass-split spin me-2"></i>Uploading...';
+        btn.disabled = true;
+    });
+</script>
+}

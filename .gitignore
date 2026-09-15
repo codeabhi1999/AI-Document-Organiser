@@ -1,0 +1,48 @@
+## Visual Studio / .NET Core
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.userprefs
+
+# Test Results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rms/
+[Aa]rm64/
+build/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sensitive configuration & local secrets
+appsettings.Development.json
+appsettings.Production.json
+*.local.json
+secrets.json
+
+# Local Uploads & App Data
+AIDocumentOrganizer.Web/App_Data/SecureUploads/*
+!AIDocumentOrganizer.Web/App_Data/SecureUploads/.gitkeep
+App_Data/SecureUploads/*
+!App_Data/SecureUploads/.gitkeep
+
+# OS generated files
+.DS_Store
+Thumbs.db
+desktop.ini

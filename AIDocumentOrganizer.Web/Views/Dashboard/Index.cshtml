@@ -1,0 +1,154 @@
+@model AIDocumentOrganizer.Web.ViewModels.DashboardViewModel
+@using AIDocumentOrganizer.Web.Models.Enums
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Dashboard";
+}
+
+<!-- Stats Row -->
+<div class="row g-4 mb-4">
+    @{
+        var stats = new[]
+        {
+            new { Label = "Total Documents",       Value = Model.TotalDocuments.ToString(),    Icon = "bi-folder2-open",   Bg = "rgba(67,97,238,0.15)",  Color = "#7b8eff" },
+            new { Label = "Expiring in 30 Days",   Value = Model.ExpiringThisMonth.ToString(), Icon = "bi-clock-history",  Bg = "rgba(244,162,97,0.15)", Color = "#f4a261" },
+            new { Label = "Expired Documents",     Value = Model.ExpiredDocuments.ToString(),  Icon = "bi-exclamation-triangle", Bg = "rgba(230,57,70,0.15)", Color = "#e63946" },
+            new { Label = "Added This Month",      Value = Model.AddedThisMonth.ToString(),    Icon = "bi-calendar-plus",  Bg = "rgba(46,196,182,0.15)", Color = "#2ec4b6" },
+        };
+    }
+    @foreach (var s in stats)
+    {
+        <div class="col-6 col-xl-3">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:@s.Bg; color:@s.Color;">
+                    <i class="@s.Icon"></i>
+                </div>
+                <div>
+                    <div class="stat-value">@s.Value</div>
+                    <div class="stat-label">@s.Label</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row g-4">
+    <!-- Upcoming Expiries -->
+    <div class="col-lg-7">
+        <div class="doc-card h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-clock-history text-warning me-2"></i>Upcoming Expiries</h5>
+                <a asp-controller="Documents" asp-action="Expiring" style="font-size:13px; color:var(--text-link);">View all</a>
+            </div>
+
+            @if (!Model.UpcomingExpiries.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="bi bi-check-circle-fill" style="font-size:36px; color:#2ec4b6;"></i>
+                    <p class="mt-2 mb-0" style="font-size:14px; color:var(--text-secondary);">No upcoming expiries. All documents are up to date!</p>
+                </div>
+            }
+            else
+            {
+                <div class="d-flex flex-column gap-2">
+                    @foreach (var doc in Model.UpcomingExpiries)
+                    {
+                        var days = doc.DaysRemaining;
+                        var daysClass = days < 0 ? "days-expired" : days <= 15 ? "days-expiring" : "days-valid";
+                        var daysText = days < 0 ? Math.Abs(days ?? 0) + "d ago" : (days == 0 ? "TODAY" : days + "d");
+                        <div class="expiry-row">
+                            <div class="expiry-days @daysClass">
+                                <div style="font-size:11px; font-weight:500; opacity:0.7;">@(days < 0 ? "Expired" : "Expires")</div>
+                                <div>@daysText</div>
+                            </div>
+                            <div style="flex:1; min-width:0;">
+                                <div class="doc-title" style="font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@doc.Title</div>
+                                <div class="doc-meta">@doc.DocumentType @(doc.CategoryName != null ? "· " + doc.CategoryName : "")</div>
+                                @if (doc.ExpiryDate.HasValue)
+                                {
+                                    <div class="doc-meta mt-1"><i class="bi bi-calendar3 me-1"></i>@doc.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
+                                }
+                            </div>
+                            <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="doc-action-btn" title="View">
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Documents by Category -->
+    <div class="col-lg-5">
+        <div class="doc-card mb-4">
+            <h5 class="mb-3 fw-600" style="font-size:15px;"><i class="bi bi-pie-chart me-2" style="color:var(--primary);"></i>By Category</h5>
+            <div id="categoryBars">
+                <p class="text-center" style="font-size:13px; color:var(--text-muted);">No documents yet.</p>
+            </div>
+        </div>
+
+        <!-- Quick Upload CTA -->
+        <div class="doc-card" style="background:linear-gradient(135deg, rgba(67,97,238,0.12), rgba(114,9,183,0.12)); border-color:rgba(67,97,238,0.25);">
+            <div class="text-center py-2">
+                <i class="bi bi-cloud-upload-fill" style="font-size:36px; color:var(--primary);"></i>
+                <h6 class="mt-2 mb-1" style="font-weight:600;">Upload a Document</h6>
+                <p class="mb-3" style="font-size:13px; color:var(--text-secondary);">AI will automatically classify and extract all key info.</p>
+                <a asp-controller="Documents" asp-action="Upload" class="btn btn-primary btn-sm px-4">
+                    <i class="bi bi-plus-lg me-1"></i>Upload Now
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Uploads -->
+@if (Model.RecentUploads.Any())
+{
+    <div class="mt-4">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-clock me-2" style="color:var(--primary);"></i>Recent Uploads</h5>
+            <a asp-controller="Documents" asp-action="Index" style="font-size:13px; color:var(--text-link);">View all</a>
+        </div>
+        <div class="doc-grid">
+            @foreach (var doc in Model.RecentUploads)
+            {
+                var statusCls = doc.ExpiryStatus switch {
+                    ExpiryStatus.Expired => "badge-expired",
+                    ExpiryStatus.ExpiringSoon => "badge-expiring",
+                    ExpiryStatus.Lifetime => "badge-lifetime",
+                    _ => "badge-valid"
+                };
+                var statusLabel = doc.ExpiryStatus switch {
+                    ExpiryStatus.Expired => "Expired",
+                    ExpiryStatus.ExpiringSoon => doc.DaysRemaining + "d left",
+                    ExpiryStatus.Lifetime => "Lifetime",
+                    _ => "Valid"
+                };
+                <a asp-controller="Documents" asp-action="Details" asp-route-id="@doc.Id" class="doc-card text-decoration-none" style="display:block;">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="doc-type-icon" style="background:@(doc.CategoryColor != null ? doc.CategoryColor + "25" : "rgba(67,97,238,0.15)"); color:@(doc.CategoryColor ?? "#7b8eff");">
+                            <i class="@(doc.CategoryIcon ?? "bi-file-earmark")"></i>
+                        </div>
+                        <div style="flex:1; min-width:0;">
+                            <div class="doc-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">@doc.Title</div>
+                            <div class="doc-meta">@doc.DocumentType</div>
+                            <div class="mt-2">
+                                <span class="badge-status @statusCls"><span class="expiry-dot dot-@(doc.ExpiryStatus.ToString().ToLower())"></span> @statusLabel</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="doc-meta mt-2"><i class="bi bi-calendar3 me-1"></i>Uploaded @doc.CreatedAt.ToString("dd MMM yyyy")</div>
+                </a>
+            }
+        </div>
+    </div>
+}
+
+@section Scripts {
+<script>
+    drawCategoryBars(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.CategoryStats.Select(c => new { name = c.Name, count = c.Count, color = c.ColorCode })
+    )));
+</script>
+}

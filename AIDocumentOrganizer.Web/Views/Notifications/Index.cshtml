@@ -1,0 +1,71 @@
+@model AIDocumentOrganizer.Web.ViewModels.NotificationViewModel
+@{
+    ViewData["Title"] = "Notifications";
+    ViewData["PageTitle"] = "Notifications";
+}
+
+<div style="max-width:700px; margin:0 auto;">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h4 class="mb-0 fw-700">
+            Notifications
+            @if (Model.UnreadCount > 0)
+            {
+                <span class="badge ms-2" style="background:var(--danger); font-size:12px;">@Model.UnreadCount new</span>
+            }
+        </h4>
+    </div>
+
+    @if (!Model.Notifications.Any())
+    {
+        <div class="doc-card text-center py-5">
+            <i class="bi bi-bell-slash" style="font-size:48px; color:var(--text-muted);"></i>
+            <h5 class="mt-3 mb-1" style="font-size:16px; color:var(--text-secondary);">No notifications</h5>
+            <p style="font-size:14px; color:var(--text-muted);">You're all caught up! Expiry reminders will appear here.</p>
+        </div>
+    }
+    else
+    {
+        <div class="d-flex flex-column gap-3">
+            @foreach (var n in Model.Notifications)
+            {
+                var iconCls = n.Type switch {
+                    "Danger"  => "bi-exclamation-circle-fill",
+                    "Warning" => "bi-clock-fill",
+                    "Success" => "bi-check-circle-fill",
+                    _         => "bi-info-circle-fill"
+                };
+                var colorCls = n.Type switch {
+                    "Danger"  => "var(--danger)",
+                    "Warning" => "var(--warning)",
+                    "Success" => "var(--success)",
+                    _         => "var(--info)"
+                };
+
+                <div class="doc-card d-flex gap-3 align-items-start @(!n.IsRead ? "unread-notification" : "")"
+                     style="@(!n.IsRead ? "border-color:rgba(67,97,238,0.35);" : "")">
+                    <div style="width:36px; height:36px; background:@(colorCls)25; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:@colorCls; font-size:16px;">
+                        <i class="@iconCls"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="d-flex align-items-start justify-content-between gap-2">
+                            <div style="font-size:14px; font-weight:600; color:var(--text-primary);">@n.Title</div>
+                            <div style="font-size:11px; color:var(--text-muted); white-space:nowrap; flex-shrink:0;">@n.CreatedAt.ToString("dd MMM, HH:mm")</div>
+                        </div>
+                        <div style="font-size:13px; color:var(--text-secondary); margin-top:3px; line-height:1.6;">@n.Message</div>
+                        @if (n.DocumentId.HasValue)
+                        {
+                            <a asp-controller="Documents" asp-action="Details" asp-route-id="@n.DocumentId"
+                               class="btn btn-outline-secondary btn-sm mt-2" style="font-size:12px; padding:3px 12px;">
+                                <i class="bi bi-arrow-right me-1"></i>View Document
+                            </a>
+                        }
+                    </div>
+                    @if (!n.IsRead)
+                    {
+                        <div style="width:8px; height:8px; background:var(--primary); border-radius:50%; flex-shrink:0; margin-top:6px;"></div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

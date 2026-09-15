@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="AIDocumentOrganizer.Tests/AIDocumentOrganizer.Tests.csproj" />
+  <Project Path="AIDocumentOrganizer.Web/AIDocumentOrganizer.Web.csproj" />
+</Solution>

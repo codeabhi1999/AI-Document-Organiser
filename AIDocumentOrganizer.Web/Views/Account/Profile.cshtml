@@ -1,0 +1,64 @@
+@model AIDocumentOrganizer.Web.ViewModels.ProfileViewModel
+@{
+    ViewData["Title"] = "My Profile";
+    ViewData["PageTitle"] = "Profile & Settings";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <form asp-controller="Account" asp-action="Profile" method="post">
+            @Html.AntiForgeryToken()
+
+            <div asp-validation-summary="All" class="alert alert-danger mb-4"></div>
+
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-person me-2"></i>Personal Information</h5>
+                <div class="mb-3">
+                    <label asp-for="FullName" class="form-label">Full Name</label>
+                    <input asp-for="FullName" class="form-control" />
+                    <span asp-validation-for="FullName" class="text-danger small"></span>
+                </div>
+                <div class="mb-0">
+                    <label class="form-label">Email Address</label>
+                    <input value="@Model.Email" class="form-control" disabled style="opacity:0.6;" />
+                    <div class="form-text" style="font-size:12px; color:var(--text-muted);">Email address cannot be changed.</div>
+                </div>
+            </div>
+
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-bell me-2"></i>Notification Preferences</h5>
+                <div class="form-check form-switch mb-3">
+                    <input asp-for="EmailRemindersEnabled" class="form-check-input" type="checkbox" role="switch" />
+                    <label asp-for="EmailRemindersEnabled" class="form-check-label" style="font-size:14px; color:var(--text-secondary);">Receive email reminders for expiring documents</label>
+                </div>
+                <div>
+                    <label asp-for="ReminderDaysBefore" class="form-label">Reminder Days Before Expiry</label>
+                    <input asp-for="ReminderDaysBefore" class="form-control" placeholder="30,15,7,1,0" />
+                    <div class="form-text" style="font-size:12px; color:var(--text-muted);">Comma-separated days. e.g. 30,15,7,1,0 means reminders at 30, 15, 7, 1 days before and on expiry day.</div>
+                </div>
+            </div>
+
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-key me-2"></i>Change Password <small style="color:var(--text-muted); font-size:13px;">(optional)</small></h5>
+                <div class="mb-3">
+                    <label asp-for="CurrentPassword" class="form-label">Current Password</label>
+                    <input asp-for="CurrentPassword" class="form-control" type="password" placeholder="Enter current password to change it" autocomplete="current-password" />
+                </div>
+                <div class="mb-3">
+                    <label asp-for="NewPassword" class="form-label">New Password</label>
+                    <input asp-for="NewPassword" class="form-control" type="password" placeholder="Min 8 chars" autocomplete="new-password" />
+                    <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                </div>
+                <div class="mb-0">
+                    <label asp-for="ConfirmNewPassword" class="form-label">Confirm New Password</label>
+                    <input asp-for="ConfirmNewPassword" class="form-control" type="password" autocomplete="new-password" />
+                    <span asp-validation-for="ConfirmNewPassword" class="text-danger small"></span>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2">
+                <i class="bi bi-check-lg me-2"></i>Save Settings
+            </button>
+        </form>
+    </div>
+</div>

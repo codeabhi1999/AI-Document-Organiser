@@ -1,0 +1,71 @@
+@{
+    ViewData["Title"] = "AI Document Organizer — Secure Personal Document Management";
+    ViewData["Description"] = "Upload, organize and get AI insights on your personal documents. Never miss an expiry again.";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="hero-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <div class="mb-3">
+                    <span class="badge-status badge-valid"><i class="bi bi-stars me-1"></i> AI-Powered Document Analysis</span>
+                </div>
+                <h1 class="hero-title mb-4">
+                    Smart Document<br>Management for<br>Modern Life
+                </h1>
+                <p class="hero-desc mb-5">
+                    Upload your Aadhaar, PAN, Passport, Insurance and more.
+                    Our AI extracts key information and reminds you before anything expires.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a asp-controller="Account" asp-action="Register" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-rocket-takeoff me-2"></i>Get Started Free
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-outline-secondary px-4 py-2">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <!-- Feature Grid -->
+                <div class="row g-3">
+                    @{
+                        var features = new[]
+                        {
+                            new { Icon = "bi-cloud-upload", Color = "#4361ee", BgColor = "rgba(67,97,238,0.15)", Title = "Secure Upload", Desc = "PDF, JPG, PNG up to 15MB. Files never publicly exposed." },
+                            new { Icon = "bi-robot", Color = "#7209b7", BgColor = "rgba(114,9,183,0.15)", Title = "AI Extraction", Desc = "Auto-reads document number, dates, issuing authority." },
+                            new { Icon = "bi-bell", Color = "#f4a261", BgColor = "rgba(244,162,97,0.15)", Title = "Expiry Reminders", Desc = "30, 15, 7, 1 day email & in-app alerts automatically." },
+                            new { Icon = "bi-search", Color = "#2ec4b6", BgColor = "rgba(46,196,182,0.15)", Title = "Smart Search", Desc = "Ask AI: 'Which documents expire next month?'" },
+                            new { Icon = "bi-shield-check", Color = "#e63946", BgColor = "rgba(230,57,70,0.15)", Title = "Bank-Grade Security", Desc = "AES-256 encryption, per-user isolation, audit logs." },
+                            new { Icon = "bi-clock-history", Color = "#4cc9f0", BgColor = "rgba(76,201,240,0.15)", Title = "Version History", Desc = "Replace expired docs while keeping full history." },
+                        };
+                    }
+                    @foreach (var f in features)
+                    {
+                        <div class="col-6">
+                            <div class="feature-card">
+                                <div class="feature-icon" style="background:@f.BgColor; color:@f.Color;">
+                                    <i class="@f.Icon"></i>
+                                </div>
+                                <h6 class="fw-600 mb-1" style="font-size:14px; color: var(--text-primary);">@f.Title</h6>
+                                <p class="mb-0" style="font-size:12px; color:var(--text-secondary); line-height:1.5;">@f.Desc</p>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Document types strip -->
+        <div class="mt-5 pt-4" style="border-top:1px solid var(--border);">
+            <p class="text-center mb-4" style="font-size:13px; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase; font-weight:600;">Supported Document Types</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                @foreach (var t in new[]{"Aadhaar","PAN Card","Passport","Driving License","Vehicle Insurance","Health Insurance","Life Insurance","RC Book","Rent Agreement","Education Cert","Bank Statement","Utility Bill","Medical Report"})
+                {
+                    <span class="badge" style="background:var(--bg-card); border:1px solid var(--border); color:var(--text-secondary); padding:6px 14px; border-radius:20px; font-size:12px; font-weight:500;">@t</span>
+                }
+            </div>
+        </div>
+    </div>
+</div>

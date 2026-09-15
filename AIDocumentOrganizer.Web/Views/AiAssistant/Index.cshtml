@@ -1,0 +1,83 @@
+@model AIDocumentOrganizer.Web.ViewModels.AiAssistantViewModel
+@{
+    ViewData["Title"] = "AI Assistant";
+    ViewData["PageTitle"] = "AI Assistant";
+}
+@Html.AntiForgeryToken()
+
+<div style="max-width:800px; margin:0 auto;">
+
+    <!-- Header -->
+    <div class="detail-section mb-3 text-center" style="background:linear-gradient(135deg, rgba(67,97,238,0.1), rgba(114,9,183,0.1)); border-color:rgba(67,97,238,0.25);">
+        <div style="width:56px; height:56px; background:linear-gradient(135deg, var(--primary), var(--accent)); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; margin:0 auto 12px;">
+            <i class="bi bi-robot"></i>
+        </div>
+        <h2 style="font-size:18px; font-weight:700; margin-bottom:6px;">Your Document AI</h2>
+        <p style="font-size:13px; color:var(--text-secondary); margin:0;">Ask questions about your documents in plain English. The AI only accesses your documents.</p>
+    </div>
+
+    <!-- Suggestion chips -->
+    <div class="d-flex flex-wrap gap-2 mb-3" id="suggestions">
+        @{
+            var suggestions = new[]
+            {
+                "Which documents expire this month?",
+                "Show all my insurance documents",
+                "Which documents expire in the next 30 days?",
+                "Summarize all my documents",
+                "Find my vehicle-related documents"
+            };
+        }
+        @foreach (var s in suggestions)
+        {
+            <button type="button" class="btn btn-outline-secondary btn-sm suggestion-chip" style="border-radius:20px; font-size:12px;"
+                    onclick="useSuggestion(this.textContent)">
+                @s
+            </button>
+        }
+    </div>
+
+    <!-- Chat Container -->
+    <div class="doc-card p-0 overflow-hidden" style="display:flex; flex-direction:column; height:calc(100vh - 320px); min-height:400px;">
+        <div class="chat-messages" id="chatMessages">
+            <!-- Welcome message -->
+            <div class="chat-bubble ai">
+                <div class="bubble-avatar ai"><i class="bi bi-robot"></i></div>
+                <div class="bubble-text">
+                    👋 Hi! I'm your document assistant. I can help you find information about <strong>your documents</strong> — expiry dates, which documents need renewal, insurance details, and more.<br><br>
+                    Try asking: <em>"Which documents expire next month?"</em>
+                </div>
+            </div>
+        </div>
+
+        <form class="chat-input-area" id="chatForm">
+            <textarea
+                id="chatInput"
+                class="form-control chat-input"
+                placeholder="Ask about your documents..."
+                rows="1"
+                required
+                maxlength="1000"></textarea>
+            <button type="submit" class="btn btn-primary" style="padding:10px 18px; flex-shrink:0;">
+                <i class="bi bi-send-fill"></i>
+            </button>
+        </form>
+    </div>
+
+    <p class="text-center mt-2" style="font-size:11px; color:var(--text-muted);">
+        <i class="bi bi-shield-lock me-1"></i>AI only accesses your documents. No data is shared with others.
+    </p>
+</div>
+
+@section Scripts {
+<script>
+function useSuggestion(text) {
+    const input = document.getElementById('chatInput');
+    if (input) {
+        input.value = text;
+        input.focus();
+        document.getElementById('chatForm').requestSubmit();
+    }
+}
+</script>
+}

@@ -1,0 +1,146 @@
+@model AIDocumentOrganizer.Web.ViewModels.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+    ViewData["PageTitle"] = "Admin Dashboard";
+}
+
+<!-- Admin Stats -->
+<div class="row g-3 mb-4">
+    @{
+        var adminStats = new[]
+        {
+            new { Label="Total Users",      Value=Model.TotalUsers.ToString(),          Icon="bi-people",           Color="#7b8eff", Bg="rgba(67,97,238,0.15)" },
+            new { Label="Total Documents",  Value=Model.TotalDocuments.ToString(),      Icon="bi-folder2-open",     Color="#2ec4b6", Bg="rgba(46,196,182,0.15)" },
+            new { Label="Storage Used",     Value=FormatBytes(Model.TotalStorageBytes), Icon="bi-hdd",              Color="#f4a261", Bg="rgba(244,162,97,0.15)" },
+            new { Label="Failed Processing",Value=Model.FailedProcessingCount.ToString(),Icon="bi-exclamation-triangle", Color="#e63946", Bg="rgba(230,57,70,0.15)" },
+            new { Label="Reminders Today",  Value=Model.RemindersSentToday.ToString(),  Icon="bi-bell",             Color="#4cc9f0", Bg="rgba(76,201,240,0.15)" },
+        };
+    }
+    @foreach (var s in adminStats)
+    {
+        <div class="col-6 col-xl">
+            <div class="stat-card">
+                <div class="stat-icon" style="background:@s.Bg; color:@s.Color;"><i class="@s.Icon"></i></div>
+                <div>
+                    <div class="stat-value" style="font-size:22px;">@s.Value</div>
+                    <div class="stat-label">@s.Label</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row g-4">
+    <!-- Recent Users -->
+    <div class="col-lg-7">
+        <div class="doc-card p-0 overflow-hidden">
+            <div class="d-flex align-items-center justify-content-between p-3" style="border-bottom:1px solid var(--border);">
+                <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-people me-2" style="color:var(--primary);"></i>Recent Users</h5>
+                <a asp-action="Users" style="font-size:13px; color:var(--text-link);">View all</a>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>User</th>
+                        <th>Docs</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var u in Model.RecentUsers)
+                    {
+                        <tr>
+                            <td>
+                                <div style="font-size:14px; font-weight:500; color:var(--text-primary);">@u.FullName</div>
+                                <div style="font-size:12px; color:var(--text-muted);">@u.Email</div>
+                            </td>
+                            <td style="color:var(--text-secondary);">@u.DocumentCount</td>
+                            <td>
+                                @foreach (var r in u.Roles)
+                                {
+                                    <span class="badge-status @(r == "Admin" ? "badge-expired" : "badge-valid")" style="font-size:11px; margin-right:3px;">@r</span>
+                                }
+                            </td>
+                            <td>
+                                <span class="badge-status @(u.IsActive ? "badge-valid" : "badge-expired")" style="font-size:11px;">@(u.IsActive ? "Active" : "Inactive")</span>
+                            </td>
+                            <td style="font-size:13px; color:var(--text-secondary);">@u.CreatedAt.ToString("dd MMM")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Category Stats & Quick Nav -->
+    <div class="col-lg-5">
+        <div class="doc-card mb-4">
+            <h5 class="fw-600 mb-3" style="font-size:15px;"><i class="bi bi-pie-chart me-2" style="color:var(--accent);"></i>Documents by Category</h5>
+            <div id="categoryBars">
+                @if (!Model.CategoryStats.Any())
+                {
+                    <p style="font-size:13px; color:var(--text-muted); text-align:center;">No documents yet.</p>
+                }
+            </div>
+        </div>
+
+        <!-- Admin Quick Nav -->
+        <div class="doc-card">
+            <h5 class="fw-600 mb-3" style="font-size:15px;"><i class="bi bi-grid me-2"></i>Quick Access</h5>
+            <div class="d-grid gap-2">
+                <a asp-action="Users"    class="btn btn-outline-secondary text-start"><i class="bi bi-people me-2"></i>User Management</a>
+                <a asp-action="AuditLogs" class="btn btn-outline-secondary text-start"><i class="bi bi-list-check me-2"></i>Audit Logs</a>
+                <a asp-action="AiLogs"  class="btn btn-outline-secondary text-start"><i class="bi bi-robot me-2"></i>AI Processing Logs</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent AI Logs -->
+@if (Model.RecentAiLogs.Any())
+{
+    <div class="mt-4">
+        <div class="doc-card p-0 overflow-hidden">
+            <div class="p-3" style="border-bottom:1px solid var(--border);">
+                <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-robot me-2" style="color:var(--accent);"></i>Recent AI Processing</h5>
+            </div>
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Document</th><th>Model</th><th>Tokens</th><th>Status</th><th>Time</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var l in Model.RecentAiLogs)
+                    {
+                        <tr>
+                            <td style="font-size:13px; color:var(--text-primary);">@(l.DocumentTitle ?? "—")</td>
+                            <td style="font-size:12px; color:var(--text-muted);">@l.ModelName</td>
+                            <td style="font-size:13px; color:var(--text-secondary);">@l.TotalTokens</td>
+                            <td><span class="badge-status @(l.Success ? "badge-valid" : "badge-failed")" style="font-size:11px;">@(l.Success ? "OK" : "Failed")</span></td>
+                            <td style="font-size:12px; color:var(--text-muted);">@l.ProcessedAt.ToString("dd MMM HH:mm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@functions {
+    static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024.0).ToString("0.0") + " KB";
+        if (bytes < 1073741824) return (bytes / 1048576.0).ToString("0.0") + " MB";
+        return (bytes / 1073741824.0).ToString("0.00") + " GB";
+    }
+}
+
+@section Scripts {
+<script>
+    drawCategoryBars(@Html.Raw(System.Text.Json.JsonSerializer.Serialize(
+        Model.CategoryStats.Select(c => new { name = c.Name, count = c.Count, color = c.ColorCode })
+    )));
+</script>
+}

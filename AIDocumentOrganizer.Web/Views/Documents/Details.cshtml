@@ -1,0 +1,269 @@
+@model AIDocumentOrganizer.Web.ViewModels.DocumentDetailsViewModel
+@using AIDocumentOrganizer.Web.Models.Enums
+@{
+    ViewData["Title"] = Model.Title;
+    ViewData["PageTitle"] = "Document Details";
+
+    var statusCls = Model.ExpiryStatus switch {
+        ExpiryStatus.Expired      => "badge-expired",
+        ExpiryStatus.ExpiringSoon => "badge-expiring",
+        ExpiryStatus.Lifetime     => "badge-lifetime",
+        _                         => "badge-valid"
+    };
+    var statusLabel = Model.ExpiryStatus switch {
+        ExpiryStatus.Expired      => "Expired",
+        ExpiryStatus.ExpiringSoon => $"{Model.DaysRemaining} days left",
+        ExpiryStatus.Lifetime     => "Lifetime",
+        _                         => "Valid"
+    };
+}
+
+<!-- Processing Alert -->
+@if (Model.ProcessingStatus == ProcessingStatus.Pending || Model.ProcessingStatus == ProcessingStatus.Processing)
+{
+    <div class="alert alert-info d-flex align-items-center gap-3 mb-4">
+        <i class="bi bi-hourglass-split spin"></i>
+        <div>
+            <strong>AI Processing in Progress</strong> — Our AI is analyzing your document. This page will update automatically.
+        </div>
+    </div>
+}
+@if (Model.ProcessingStatus == ProcessingStatus.Failed)
+{
+    <div class="alert alert-danger d-flex gap-3 align-items-start mb-4">
+        <i class="bi bi-exclamation-circle-fill fs-5 mt-1"></i>
+        <div>
+            <strong>AI Processing Failed</strong>
+            <div style="font-size:13px; opacity:0.85; margin-top:4px;">@(Model.ProcessingErrorMessage ?? "Unknown error.")</div>
+            <form asp-action="RetryProcessing" asp-route-id="@Model.Id" method="post" class="mt-2 d-inline">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Retry AI Analysis</button>
+            </form>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary btn-sm ms-2"><i class="bi bi-pencil me-1"></i>Enter Manually</a>
+        </div>
+    </div>
+}
+@if (Model.ProcessingStatus == ProcessingStatus.NeedsReview)
+{
+    <div class="alert alert-warning d-flex gap-3 align-items-start mb-4">
+        <i class="bi bi-eye fs-5 mt-1"></i>
+        <div>
+            <strong>Review AI-Extracted Data</strong>
+            <div style="font-size:13px; opacity:0.85; margin-top:4px;">AI has extracted the information below. Please verify and edit if needed.</div>
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning btn-sm mt-2" style="background:#f4a261; border:none; color:#fff;"><i class="bi bi-pencil-square me-1"></i>Review & Confirm</a>
+        </div>
+    </div>
+}
+
+<div class="row g-4">
+    <!-- Left: Document Info -->
+    <div class="col-lg-8">
+
+        <!-- Header Card -->
+        <div class="detail-section">
+            <div class="d-flex align-items-start gap-4">
+                <div class="doc-type-icon" style="width:60px; height:60px; font-size:28px; flex-shrink:0; background:@(Model.CategoryColor + "25" ?? "rgba(67,97,238,0.15)"); color:@(Model.CategoryColor ?? "#7b8eff");">
+                    <i class="@(Model.CategoryIcon ?? "bi-file-earmark")"></i>
+                </div>
+                <div style="flex:1;">
+                    <h1 style="font-size:22px; font-weight:700; color:var(--text-primary); margin-bottom:4px;">@Model.Title</h1>
+                    <div style="font-size:14px; color:var(--text-secondary); margin-bottom:12px;">
+                        @Model.DocumentType @(Model.CategoryName != null ? $"· {Model.CategoryName}" : "")
+                    </div>
+                    <span class="badge-status @statusCls fs-6"><i class="bi bi-circle-fill me-1" style="font-size:8px;"></i>@statusLabel</span>
+                </div>
+                <div class="d-flex gap-2">
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-secondary btn-sm" title="Edit">
+                        <i class="bi bi-pencil me-1"></i>Edit
+                    </a>
+                    @if (Model.CurrentVersionId.HasValue)
+                    {
+                        <a asp-action="Download" asp-route-versionId="@Model.CurrentVersionId" class="btn btn-primary btn-sm" title="Download">
+                            <i class="bi bi-download me-1"></i>Download
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Extracted Details -->
+        <div class="detail-section">
+            <h5><i class="bi bi-card-text me-2"></i>Document Information</h5>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Document Number</div>
+                    <div class="detail-value"><code style="color:var(--text-secondary);">@(Model.DocumentNumberMasked ?? "—")</code></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Holder Name</div>
+                    <div class="detail-value">@(Model.HolderName ?? "—")</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Issuing Authority</div>
+                    <div class="detail-value">@(Model.IssuingAuthority ?? "—")</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Issue Date</div>
+                    <div class="detail-value">@(Model.IssueDate.HasValue ? Model.IssueDate.Value.ToString("dd MMM yyyy") : "—")</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Expiry Date</div>
+                    <div class="detail-value" style="color:@(Model.ExpiryStatus == ExpiryStatus.Expired ? "var(--danger)" : Model.ExpiryStatus == ExpiryStatus.ExpiringSoon ? "var(--warning)" : "inherit");">
+                        @(Model.ExpiryDate.HasValue ? Model.ExpiryDate.Value.ToString("dd MMM yyyy") : "No Expiry")
+                    </div>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.VehicleNumber))
+                {
+                    <div class="detail-item">
+                        <div class="detail-label">Vehicle Number</div>
+                        <div class="detail-value">@Model.VehicleNumber</div>
+                    </div>
+                }
+                @if (!string.IsNullOrWhiteSpace(Model.PolicyNumber))
+                {
+                    <div class="detail-item">
+                        <div class="detail-label">Policy Number</div>
+                        <div class="detail-value">@Model.PolicyNumber</div>
+                    </div>
+                }
+                @if (Model.Amount.HasValue)
+                {
+                    <div class="detail-item">
+                        <div class="detail-label">Amount</div>
+                        <div class="detail-value">₹ @Model.Amount.Value.ToString("N2")</div>
+                    </div>
+                }
+            </div>
+            @if (!string.IsNullOrWhiteSpace(Model.Notes))
+            {
+                <div class="mt-2">
+                    <div class="detail-label">Notes</div>
+                    <div class="detail-value" style="font-size:14px; line-height:1.7;">@Model.Notes</div>
+                </div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.Tags))
+            {
+                <div class="mt-3 d-flex flex-wrap gap-2">
+                    @foreach (var tag in Model.Tags.Split(','))
+                    {
+                        <span style="background:rgba(255,255,255,0.06); color:var(--text-secondary); font-size:12px; padding:3px 10px; border-radius:12px; font-weight:500;">#@tag.Trim()</span>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Extracted Text (collapsible) -->
+        @if (!string.IsNullOrWhiteSpace(Model.ExtractedText))
+        {
+            <div class="detail-section">
+                <button class="d-flex align-items-center gap-2 w-100 mb-0 bg-transparent border-0 text-start p-0"
+                        type="button" data-bs-toggle="collapse" data-bs-target="#extractedText">
+                    <h5 class="mb-0"><i class="bi bi-file-text me-2"></i>Extracted Text</h5>
+                    <i class="bi bi-chevron-down ms-auto" style="color:var(--text-muted);"></i>
+                </button>
+                <div class="collapse mt-3" id="extractedText">
+                    <pre style="font-size:12px; color:var(--text-secondary); background:var(--bg-input); padding:14px; border-radius:8px; white-space:pre-wrap; max-height:300px; overflow-y:auto;">@Model.ExtractedText</pre>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Right: Preview & Actions -->
+    <div class="col-lg-4">
+
+        <!-- Preview -->
+        @if (Model.CurrentVersionId.HasValue)
+        {
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-eye me-2"></i>Preview</h5>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-secondary"
+                            data-preview-url="/Documents/Preview/@Model.CurrentVersionId"
+                            data-preview-type="@Model.ContentType"
+                            type="button">
+                        <i class="bi bi-eye me-1"></i>View Document
+                    </button>
+                    <a asp-action="Download" asp-route-versionId="@Model.CurrentVersionId" class="btn btn-outline-secondary">
+                        <i class="bi bi-download me-1"></i>Download
+                    </a>
+                </div>
+            </div>
+        }
+
+        <!-- Metadata -->
+        <div class="detail-section mb-4">
+            <h5><i class="bi bi-info-circle me-2"></i>Metadata</h5>
+            <div class="detail-item mb-2">
+                <div class="detail-label">Uploaded</div>
+                <div class="detail-value" style="font-size:14px;">@Model.CreatedAt.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+            <div class="detail-item">
+                <div class="detail-label">Last Updated</div>
+                <div class="detail-value" style="font-size:14px;">@Model.UpdatedAt.ToString("dd MMM yyyy HH:mm")</div>
+            </div>
+        </div>
+
+        <!-- Version History -->
+        @if (Model.Versions.Any())
+        {
+            <div class="detail-section">
+                <h5><i class="bi bi-clock-history me-2"></i>Version History</h5>
+                @foreach (var ver in Model.Versions)
+                {
+                    <div class="d-flex align-items-center gap-3 mb-2 p-2 rounded" style="background:@(ver.IsActive ? "rgba(67,97,238,0.1)" : "rgba(255,255,255,0.03)"); border:1px solid @(ver.IsActive ? "rgba(67,97,238,0.3)" : "var(--border)");">
+                        <i class="bi bi-file-earmark" style="font-size:20px; color:@(ver.IsActive ? "var(--primary)" : "var(--text-muted)");"></i>
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-size:13px; font-weight:600; color:var(--text-primary);">
+                                v@ver.VersionNumber @(ver.IsActive ? "(Current)" : "")
+                            </div>
+                            <div class="doc-meta">@ver.OriginalFileName</div>
+                            <div class="doc-meta">@ver.UploadedAt.ToString("dd MMM yyyy")</div>
+                        </div>
+                        <a asp-action="Download" asp-route-versionId="@ver.Id" class="doc-action-btn" title="Download this version">
+                            <i class="bi bi-download"></i>
+                        </a>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- Danger Zone -->
+        <div class="detail-section mt-4" style="border-color:rgba(230,57,70,0.25);">
+            <h5 style="color:var(--danger);"><i class="bi bi-exclamation-triangle me-2"></i>Danger Zone</h5>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post" id="deleteDocForm">
+                @Html.AntiForgeryToken()
+            </form>
+            <button type="button" class="btn btn-danger btn-sm w-100"
+                    onclick="confirmDelete('deleteDocForm', '@Model.Title.Replace("'","\\'")')">
+                <i class="bi bi-trash me-1"></i>Delete Document
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-label="Document Preview">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Document Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-2 preview-modal-body">
+                <iframe id="previewFrame" class="d-none"></iframe>
+                <img id="previewImg" class="d-none" alt="Document preview" />
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (Model.ProcessingStatus == ProcessingStatus.Pending || Model.ProcessingStatus == ProcessingStatus.Processing)
+{
+    @section Scripts {
+    <script>pollProcessingStatus('@Model.Id', 'processingBadge');</script>
+    }
+}

@@ -1,0 +1,190 @@
+@using Microsoft.AspNetCore.Identity
+@using AIDocumentOrganizer.Web.Models.Entities
+@inject SignInManager<ApplicationUser> SignInMgr
+@inject UserManager<ApplicationUser> UserMgr
+
+@{
+    var user = SignInMgr.IsSignedIn(User) ? await UserMgr.GetUserAsync(User) : null;
+    var isAdmin = user != null && await UserMgr.IsInRoleAsync(user, "Admin");
+    var currentPath = Context.Request.Path.Value ?? "";
+}
+
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@(ViewData["Title"] ?? "AI Document Organizer")</title>
+    <meta name="description" content="@(ViewData["Description"] ?? "Securely manage and organize your personal documents with AI-powered analysis.")">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+
+@if (SignInMgr.IsSignedIn(User))
+{
+    <!-- Authenticated Layout: Sidebar + Main -->
+    <div class="app-shell">
+
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-logo">
+                    <div class="brand-icon"><i class="bi bi-file-earmark-text-fill"></i></div>
+                    <div class="brand-text">
+                        <span class="brand-name">DocOrganizer</span>
+                        <span class="brand-sub">AI Powered</span>
+                    </div>
+                </div>
+                <button class="sidebar-toggle d-lg-none" id="sidebarClose"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <div class="sidebar-body">
+                <ul class="nav-menu">
+                    <li class="nav-item-label">Main</li>
+                    <li class="nav-item @(currentPath == "/Dashboard" || currentPath == "/" ? "active" : "")">
+                        <a asp-controller="Dashboard" asp-action="Index" class="nav-link">
+                            <i class="bi bi-grid-1x2"></i> <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item @(currentPath.StartsWith("/Documents") ? "active" : "")">
+                        <a asp-controller="Documents" asp-action="Index" class="nav-link">
+                            <i class="bi bi-folder2-open"></i> <span>My Documents</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-controller="Documents" asp-action="Upload" class="nav-link">
+                            <i class="bi bi-cloud-upload"></i> <span>Upload Document</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a asp-controller="Documents" asp-action="Expiring" class="nav-link">
+                            <i class="bi bi-clock-history"></i> <span>Expiring Soon</span>
+                        </a>
+                    </li>
+
+                    <li class="nav-item-label mt-2">AI & Tools</li>
+                    <li class="nav-item @(currentPath.StartsWith("/AiAssistant") ? "active" : "")">
+                        <a asp-controller="AiAssistant" asp-action="Index" class="nav-link">
+                            <i class="bi bi-robot"></i> <span>AI Assistant</span>
+                        </a>
+                    </li>
+                    <li class="nav-item @(currentPath.StartsWith("/Notifications") ? "active" : "")">
+                        <a asp-controller="Notifications" asp-action="Index" class="nav-link">
+                            <i class="bi bi-bell"></i> <span>Notifications</span>
+                            @{
+                                // Show badge count via ViewBag if set
+                                if (ViewBag.UnreadCount is int count && count > 0)
+                                {
+                                    <span class="nav-badge">@count</span>
+                                }
+                            }
+                        </a>
+                    </li>
+
+                    @if (isAdmin)
+                    {
+                        <li class="nav-item-label mt-2">Admin</li>
+                        <li class="nav-item @(currentPath.StartsWith("/Admin") ? "active" : "")">
+                            <a asp-controller="Admin" asp-action="Index" class="nav-link">
+                                <i class="bi bi-shield-lock"></i> <span>Admin Panel</span>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </div>
+
+            <div class="sidebar-footer">
+                <a asp-controller="Account" asp-action="Profile" class="user-card">
+                    <div class="user-avatar">@(user?.FullName?.Substring(0, 1).ToUpper() ?? "U")</div>
+                    <div class="user-info">
+                        <div class="user-name">@user?.FullName</div>
+                        <div class="user-role">@(isAdmin ? "Admin" : "User")</div>
+                    </div>
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn-logout" title="Logout">
+                        <i class="bi bi-box-arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <!-- Topbar -->
+            <header class="topbar">
+                <button class="sidebar-toggle-btn d-lg-none" id="sidebarOpen">
+                    <i class="bi bi-list"></i>
+                </button>
+                <div class="topbar-title">@(ViewData["PageTitle"] ?? ViewData["Title"] ?? "Dashboard")</div>
+                <div class="topbar-actions">
+                    <a asp-controller="Notifications" asp-action="Index" class="topbar-icon-btn" title="Notifications">
+                        <i class="bi bi-bell"></i>
+                    </a>
+                    <a asp-controller="Documents" asp-action="Upload" class="btn btn-primary btn-sm px-3">
+                        <i class="bi bi-plus-lg me-1"></i> Upload
+                    </a>
+                </div>
+            </header>
+
+            <!-- Toast Notifications -->
+            @if (TempData["Success"] is string successMsg)
+            {
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
+                    <div class="toast-msg toast-success show">
+                        <i class="bi bi-check-circle-fill me-2"></i> @successMsg
+                        <button type="button" class="toast-close"><i class="bi bi-x"></i></button>
+                    </div>
+                </div>
+            }
+            @if (TempData["Error"] is string errorMsg)
+            {
+                <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:9999">
+                    <div class="toast-msg toast-error show">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i> @errorMsg
+                        <button type="button" class="toast-close"><i class="bi bi-x"></i></button>
+                    </div>
+                </div>
+            }
+
+            <!-- Page Content -->
+            <main class="page-content">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <!-- Sidebar Overlay (mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
+}
+else
+{
+    <!-- Public Layout -->
+    <nav class="navbar navbar-expand-lg public-navbar">
+        <div class="container">
+            <a class="navbar-brand" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-file-earmark-text-fill me-2"></i>DocOrganizer
+            </a>
+            <div class="ms-auto d-flex gap-2">
+                <a asp-controller="Account" asp-action="Login" class="btn btn-outline-light btn-sm">Login</a>
+                <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-sm">Get Started</a>
+            </div>
+        </div>
+    </nav>
+    <main>
+        @RenderBody()
+    </main>
+}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

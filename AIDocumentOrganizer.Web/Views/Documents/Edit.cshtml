@@ -1,0 +1,113 @@
+@model AIDocumentOrganizer.Web.ViewModels.DocumentEditViewModel
+@{
+    ViewData["Title"] = "Edit Document";
+    ViewData["PageTitle"] = "Edit Document";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <input asp-for="Id" type="hidden" />
+
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+            <!-- Basic Info -->
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-info-circle me-2"></i>Document Information</h5>
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="Title" class="form-label">Document Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="CategoryId" class="form-label">Category</label>
+                        <select asp-for="CategoryId" asp-items="Model.Categories" class="form-select">
+                            <option value="">-- Select --</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DocumentType" class="form-label">Document Type</label>
+                        <input asp-for="DocumentType" class="form-control" placeholder="e.g. Aadhaar Card, Passport" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="HolderName" class="form-label">Holder Name</label>
+                        <input asp-for="HolderName" class="form-control" placeholder="Full name" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="IssuingAuthority" class="form-label">Issuing Authority</label>
+                        <input asp-for="IssuingAuthority" class="form-control" placeholder="e.g. UIDAI, RTO, HDFC ERGO" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="DocumentNumber" class="form-label">Document Number <small style="color:var(--text-muted);">(will be encrypted)</small></label>
+                        <input asp-for="DocumentNumber" class="form-control" placeholder="Enter the actual number to re-encrypt" />
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dates -->
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-calendar3 me-2"></i>Dates</h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label asp-for="IssueDate" class="form-label">Issue Date</label>
+                        <input asp-for="IssueDate" class="form-control" type="date" />
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="ExpiryDate" class="form-label">Expiry Date</label>
+                        <input asp-for="ExpiryDate" class="form-control" type="date" />
+                        <div class="form-text" style="font-size:12px; color:var(--text-muted);">Leave blank if document never expires.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Optional Fields -->
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-three-dots me-2"></i>Additional Fields</h5>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label asp-for="VehicleNumber" class="form-label">Vehicle Number</label>
+                        <input asp-for="VehicleNumber" class="form-control" placeholder="e.g. MH-02-CD-1234" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="PolicyNumber" class="form-label">Policy Number</label>
+                        <input asp-for="PolicyNumber" class="form-control" />
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Amount" class="form-label">Amount (₹)</label>
+                        <input asp-for="Amount" class="form-control" type="number" step="0.01" />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Tags" class="form-label">Tags <small style="color:var(--text-muted);">(comma-separated)</small></label>
+                        <input asp-for="Tags" class="form-control" placeholder="vehicle, insurance, car..." />
+                    </div>
+                    <div class="col-12">
+                        <label asp-for="Notes" class="form-label">Notes</label>
+                        <textarea asp-for="Notes" class="form-control" rows="3" placeholder="Any important notes about this document..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Version Upload -->
+            <div class="detail-section mb-4">
+                <h5><i class="bi bi-arrow-up-circle me-2"></i>Replace Document File <small style="color:var(--text-muted); font-size:13px;">(optional — creates a new version)</small></h5>
+                <div class="mb-3">
+                    <input asp-for="NewFile" type="file" class="form-control" accept=".pdf,.jpg,.jpeg,.png" />
+                    <span asp-validation-for="NewFile" class="text-danger small"></span>
+                </div>
+                <div>
+                    <label asp-for="ChangeSummary" class="form-label">Change Summary</label>
+                    <input asp-for="ChangeSummary" class="form-control" placeholder="e.g. Renewed for 2027" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-primary flex-grow-1 py-2">
+                    <i class="bi bi-check-lg me-2"></i>Save Changes
+                </button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary py-2 px-4">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

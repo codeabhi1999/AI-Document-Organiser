@@ -1,0 +1,36 @@
+@model List<AIDocumentOrganizer.Web.Models.Entities.AuditLog>
+@{
+    ViewData["Title"] = "Audit Logs";
+    ViewData["PageTitle"] = "Audit Logs";
+}
+<div class="doc-card p-0 overflow-hidden">
+    <div class="p-3" style="border-bottom:1px solid var(--border);">
+        <h5 class="mb-0 fw-600" style="font-size:15px;"><i class="bi bi-list-check me-2"></i>Audit Logs (Page @ViewBag.Page of @ViewBag.TotalPages)</h5>
+    </div>
+    <table class="admin-table">
+        <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>IP</th><th>Details</th></tr></thead>
+        <tbody>
+            @foreach (var log in Model)
+            {
+                <tr>
+                    <td style="font-size:12px; color:var(--text-muted); white-space:nowrap;">@log.Timestamp.ToString("dd MMM HH:mm:ss")</td>
+                    <td style="font-size:13px; color:var(--text-secondary);">@(log.User?.Email ?? log.UserId ?? "—")</td>
+                    <td><span class="badge-status badge-valid" style="font-size:11px;">@log.Action</span></td>
+                    <td style="font-size:12px; color:var(--text-muted);">@log.EntityName</td>
+                    <td style="font-size:12px; color:var(--text-muted);">@(log.IpAddress ?? "—")</td>
+                    <td style="font-size:12px; color:var(--text-secondary); max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="@log.Details">@log.Details</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+<nav class="mt-3 d-flex justify-content-center">
+    <ul class="pagination">
+        @for (var p = 1; p <= (int)ViewBag.TotalPages; p++)
+        {
+            <li class="page-item @(p == (int)ViewBag.Page ? "active" : "")">
+                <a class="page-link" asp-action="AuditLogs" asp-route-page="@p">@p</a>
+            </li>
+        }
+    </ul>
+</nav>

@@ -1,0 +1,191 @@
+@model AIDocumentOrganizer.Web.ViewModels.DocumentListViewModel
+@using AIDocumentOrganizer.Web.Models.Enums
+@{
+    ViewData["Title"] = ViewBag.PageTitle ?? "My Documents";
+    ViewData["PageTitle"] = ViewBag.PageTitle ?? "My Documents";
+}
+
+<!-- Search & Filter Bar -->
+<form method="get" class="mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label">Search</label>
+            <div class="position-relative">
+                <i class="bi bi-search position-absolute" style="left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); z-index:1;"></i>
+                <input type="text" name="search" value="@Model.SearchTerm" class="form-control ps-5" placeholder="Name, type, holder, tag..." />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Category</label>
+            <select name="categoryId" class="form-select">
+                <option value="">All Categories</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Value" selected="@(Model.CategoryId?.ToString() == c.Value)">@c.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Status</label>
+            <select name="expiryFilter" class="form-select">
+                <option value="">All</option>
+                <option value="valid"       selected="@(Model.ExpiryFilter == "valid")">Valid</option>
+                <option value="expiringsoon" selected="@(Model.ExpiryFilter == "expiringsoon")">Expiring Soon</option>
+                <option value="expired"     selected="@(Model.ExpiryFilter == "expired")">Expired</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Sort By</label>
+            <select name="sortBy" class="form-select">
+                <option value="UploadDate" selected="@(Model.SortBy == DocumentSortBy.UploadDate)">Upload Date</option>
+                <option value="ExpiryDate" selected="@(Model.SortBy == DocumentSortBy.ExpiryDate)">Expiry Date</option>
+                <option value="Name"       selected="@(Model.SortBy == DocumentSortBy.Name)">Name</option>
+            </select>
+        </div>
+        <div class="col-md-1">
+            <button type="submit" class="btn btn-primary w-100" style="padding:10px;">
+                <i class="bi bi-funnel"></i>
+            </button>
+        </div>
+    </div>
+</form>
+
+<!-- Results Header -->
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <span style="font-size:14px; color:var(--text-secondary);">
+        @Model.TotalCount document@(Model.TotalCount != 1 ? "s" : "") found
+        @if (!string.IsNullOrWhiteSpace(Model.SearchTerm))
+        {
+            <span>for "<strong style="color:var(--text-primary);">@Model.SearchTerm</strong>"</span>
+        }
+    </span>
+    <a asp-action="Upload" class="btn btn-primary btn-sm px-3">
+        <i class="bi bi-plus-lg me-1"></i>Upload
+    </a>
+</div>
+
+<!-- Documents Grid -->
+@if (!Model.Documents.Any())
+{
+    <div class="doc-card text-center py-5">
+        <i class="bi bi-folder-x" style="font-size:48px; color:var(--text-muted);"></i>
+        <h5 class="mt-3 mb-1" style="font-size:16px; color:var(--text-secondary);">No documents found</h5>
+        <p style="font-size:14px; color:var(--text-muted);">
+            @if (!string.IsNullOrWhiteSpace(Model.SearchTerm) || Model.CategoryId.HasValue)
+            {
+                <span>Try adjusting your search filters.</span>
+            }
+            else
+            {
+                <span>Upload your first document to get started.</span>
+            }
+        </p>
+        <a asp-action="Upload" class="btn btn-primary btn-sm mt-2 px-4"><i class="bi bi-cloud-upload me-1"></i>Upload Document</a>
+    </div>
+}
+else
+{
+    <div class="doc-grid">
+        @foreach (var doc in Model.Documents)
+        {
+            var statusCls = doc.ExpiryStatus switch {
+                ExpiryStatus.Expired      => "badge-expired",
+                ExpiryStatus.ExpiringSoon => "badge-expiring",
+                ExpiryStatus.Lifetime     => "badge-lifetime",
+                _                         => "badge-valid"
+            };
+            var procCls = doc.ProcessingStatus switch {
+                ProcessingStatus.Failed      => "badge-failed",
+                ProcessingStatus.NeedsReview => "badge-review",
+                ProcessingStatus.Processing  => "badge-processing",
+                ProcessingStatus.Completed   => "",
+                _                            => "badge-pending"
+            };
+
+            <div class="doc-card">
+                <div class="d-flex align-items-start gap-3 mb-3">
+                    <div class="doc-type-icon" style="background:@(doc.CategoryColor + "25" ?? "rgba(67,97,238,0.15)"); color:@(doc.CategoryColor ?? "#7b8eff");">
+                        <i class="@(doc.CategoryIcon ?? "bi-file-earmark")"></i>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <div class="doc-title" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="@doc.Title">@doc.Title</div>
+                        <div class="doc-meta">@doc.DocumentType</div>
+                        @if (!string.IsNullOrWhiteSpace(doc.CategoryName))
+                        {
+                            <div class="doc-meta" style="margin-top:2px; color:@doc.CategoryColor;">@doc.CategoryName</div>
+                        }
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(doc.HolderName))
+                {
+                    <div class="doc-meta mb-1"><i class="bi bi-person me-1"></i>@doc.HolderName</div>
+                }
+                @if (!string.IsNullOrWhiteSpace(doc.DocumentNumberMasked))
+                {
+                    <div class="doc-meta mb-1"><i class="bi bi-hash me-1"></i><code style="font-size:12px; color:var(--text-secondary);">@doc.DocumentNumberMasked</code></div>
+                }
+                @if (doc.ExpiryDate.HasValue)
+                {
+                    <div class="doc-meta mb-2"><i class="bi bi-calendar-event me-1"></i>Expires @doc.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
+                }
+
+                <div class="d-flex align-items-center gap-2 mt-2 flex-wrap">
+                    <span class="badge-status @statusCls" style="font-size:11px;">
+                        @(doc.ExpiryStatus == ExpiryStatus.Expired ? "Expired" :
+                          doc.ExpiryStatus == ExpiryStatus.ExpiringSoon ? (doc.DaysRemaining + " days left") :
+                          doc.ExpiryStatus == ExpiryStatus.Lifetime ? "Lifetime" : "Valid")
+                    </span>
+                    @if (doc.ProcessingStatus != ProcessingStatus.Completed && !string.IsNullOrEmpty(procCls))
+                    {
+                        <span class="badge-status @procCls" style="font-size:11px;">@doc.ProcessingStatus</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrWhiteSpace(doc.Tags))
+                {
+                    <div class="mt-2 d-flex flex-wrap gap-1">
+                        @foreach (var tag in doc.Tags.Split(',').Take(3))
+                        {
+                            <span style="background:rgba(255,255,255,0.06); color:var(--text-muted); font-size:10px; padding:2px 8px; border-radius:10px; font-weight:500;">#@tag.Trim()</span>
+                        }
+                    </div>
+                }
+
+                <div class="d-flex align-items-center justify-content-between mt-3 pt-2" style="border-top:1px solid var(--border);">
+                    <div class="doc-meta"><i class="bi bi-calendar3 me-1"></i>@doc.CreatedAt.ToString("dd MMM yyyy")</div>
+                    <div class="doc-actions">
+                        <a asp-action="Details" asp-route-id="@doc.Id" class="doc-action-btn" title="View Details"><i class="bi bi-eye"></i></a>
+                        <a asp-action="Edit" asp-route-id="@doc.Id" class="doc-action-btn" title="Edit"><i class="bi bi-pencil"></i></a>
+                        <form asp-action="Delete" asp-route-id="@doc.Id" method="post" id="del-@doc.Id" style="display:inline;">
+                            @Html.AntiForgeryToken()
+                        </form>
+                        <button type="button" class="doc-action-btn" title="Delete" onclick="confirmDelete('del-@doc.Id', '@doc.Title.Replace("'","\\'")')">
+                            <i class="bi bi-trash" style="color:var(--danger);"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <nav class="mt-4 d-flex justify-content-center" aria-label="Document pages">
+            <ul class="pagination">
+                @for (var p = 1; p <= Model.TotalPages; p++)
+                {
+                    <li class="page-item @(p == Model.Page ? "active" : "")">
+                        <a class="page-link" asp-action="Index"
+                           asp-route-search="@Model.SearchTerm"
+                           asp-route-categoryId="@Model.CategoryId"
+                           asp-route-expiryFilter="@Model.ExpiryFilter"
+                           asp-route-sortBy="@Model.SortBy"
+                           asp-route-page="@p">@p</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+}
