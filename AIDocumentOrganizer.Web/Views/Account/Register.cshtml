@@ -1,58 +1,157 @@
 @model AIDocumentOrganizer.Web.ViewModels.RegisterViewModel
 @{
-    ViewData["Title"] = "Create Account";
+    ViewData["Title"] = "Create Account — DocVault";
     Layout = "~/Views/Shared/_Layout.cshtml";
 }
 
-<div class="auth-page">
-    <div class="auth-card">
-        <div class="auth-logo"><i class="bi bi-person-plus-fill"></i></div>
-        <h1 class="auth-title">Create Account</h1>
-        <p class="auth-sub">Start organizing your documents securely</p>
+<div class="auth-wrapper">
+    <!-- Ambient glowing spheres -->
+    <div class="auth-ambient-glow auth-glow-1"></div>
+    <div class="auth-ambient-glow auth-glow-2"></div>
 
-        <form asp-action="Register" method="post" novalidate>
+    <div class="auth-card-modern">
+        <!-- Brand / Header -->
+        <div class="text-center mb-4">
+            <div class="auth-logo-modern mb-3 mx-auto">
+                <i class="bi bi-person-plus-fill"></i>
+            </div>
+            <h2 class="auth-title-modern">Create Your <span class="gradient-text">Account</span></h2>
+            <p class="auth-subtitle-modern">Intelligent, encrypted personal document organization</p>
+        </div>
+
+        @if (!ViewData.ModelState.IsValid && ViewData.ModelState.ErrorCount > 0)
+        {
+            <div asp-validation-summary="All" class="alert alert-danger mb-4 py-2 px-3 small border-danger text-light" style="background:rgba(239,68,68,0.15); border-radius:var(--radius-md);"></div>
+        }
+
+        <form asp-action="Register" method="post" id="registerForm" novalidate>
             @Html.AntiForgeryToken()
-            <div asp-validation-summary="All" class="alert alert-danger mb-3 d-none" id="errorSummary"></div>
 
+            <!-- Full Name -->
             <div class="mb-3">
-                <label asp-for="FullName" class="form-label"></label>
-                <div class="input-group-icon">
-                    <i class="bi bi-person"></i>
-                    <input asp-for="FullName" class="form-control ps-4" placeholder="Your full name" autocomplete="name" />
+                <label asp-for="FullName" class="form-label-modern">Full Name</label>
+                <div class="input-icon-group">
+                    <i class="bi bi-person-fill input-icon"></i>
+                    <input asp-for="FullName" class="form-control-modern" placeholder="e.g. Alex Johnson" autocomplete="name" required />
                 </div>
-                <span asp-validation-for="FullName" class="text-danger small"></span>
+                <span asp-validation-for="FullName" class="text-danger small mt-1 d-block"></span>
             </div>
 
+            <!-- Email Address -->
             <div class="mb-3">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" placeholder="you@example.com" autocomplete="email" />
-                <span asp-validation-for="Email" class="text-danger small"></span>
+                <label asp-for="Email" class="form-label-modern">Email Address</label>
+                <div class="input-icon-group">
+                    <i class="bi bi-envelope-fill input-icon"></i>
+                    <input asp-for="Email" class="form-control-modern" placeholder="name@example.com" autocomplete="email" required />
+                </div>
+                <span asp-validation-for="Email" class="text-danger small mt-1 d-block"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label"></label>
-                <input asp-for="Password" class="form-control" placeholder="Min 8 chars, 1 upper, 1 digit, 1 symbol" autocomplete="new-password" />
-                <span asp-validation-for="Password" class="text-danger small"></span>
+            <!-- Password -->
+            <div class="mb-2">
+                <label asp-for="Password" class="form-label-modern">Password</label>
+                <div class="input-icon-group">
+                    <i class="bi bi-shield-lock-fill input-icon"></i>
+                    <input asp-for="Password" class="form-control-modern has-pwd-toggle" id="passwordInput" type="password" placeholder="••••••••••••" autocomplete="new-password" required />
+                    <button type="button" class="btn-toggle-pwd" id="togglePasswordBtn" title="Show/Hide Password">
+                        <i class="bi bi-eye-slash-fill" id="pwdEyeIcon"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="Password" class="text-danger small mt-1 d-block"></span>
             </div>
 
+            <!-- Password Requirements Live Checklist -->
+            <div class="password-reqs-card mb-3">
+                <div class="password-req-item" id="req-len">
+                    <i class="bi bi-circle" id="icon-len"></i> <span>At least 8 characters</span>
+                </div>
+                <div class="password-req-item" id="req-upper">
+                    <i class="bi bi-circle" id="icon-upper"></i> <span>One uppercase letter (A-Z)</span>
+                </div>
+                <div class="password-req-item" id="req-digit">
+                    <i class="bi bi-circle" id="icon-digit"></i> <span>One numeric digit (0-9)</span>
+                </div>
+                <div class="password-req-item" id="req-symbol">
+                    <i class="bi bi-circle" id="icon-symbol"></i> <span>One special character (!@@#$%^&*)</span>
+                </div>
+            </div>
+
+            <!-- Confirm Password -->
             <div class="mb-4">
-                <label asp-for="ConfirmPassword" class="form-label"></label>
-                <input asp-for="ConfirmPassword" class="form-control" placeholder="Repeat password" autocomplete="new-password" />
-                <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                <label asp-for="ConfirmPassword" class="form-label-modern">Confirm Password</label>
+                <div class="input-icon-group">
+                    <i class="bi bi-shield-check-fill input-icon"></i>
+                    <input asp-for="ConfirmPassword" class="form-control-modern has-pwd-toggle" id="confirmPasswordInput" type="password" placeholder="••••••••••••" autocomplete="new-password" required />
+                    <button type="button" class="btn-toggle-pwd" id="toggleConfirmPasswordBtn" title="Show/Hide Password">
+                        <i class="bi bi-eye-slash-fill" id="confirmPwdEyeIcon"></i>
+                    </button>
+                </div>
+                <span asp-validation-for="ConfirmPassword" class="text-danger small mt-1 d-block"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 py-2">
-                <i class="bi bi-rocket-takeoff me-2"></i>Create Account
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-gradient-primary w-100 py-2-5 shadow-glow mb-3">
+                <i class="bi bi-rocket-takeoff-fill me-2"></i>Create Free Account
             </button>
         </form>
 
-        <p class="text-center mt-4 mb-0" style="font-size:14px; color:var(--text-secondary);">
-            Already have an account? <a asp-action="Login">Sign in</a>
+        <p class="text-center mt-3 mb-0 text-secondary small">
+            Already have an account? <a asp-action="Login" class="text-primary fw-semibold text-decoration-none">Sign in</a>
         </p>
+
+        <!-- Trust Badges -->
+        <div class="auth-trust-badges">
+            <span class="auth-trust-pill"><i class="bi bi-lock-fill text-primary"></i> AES-256 Encrypted</span>
+            <span class="auth-trust-pill"><i class="bi bi-shield-fill-check text-success"></i> Zero Leakage</span>
+            <span class="auth-trust-pill"><i class="bi bi-stars text-warning"></i> AI Powered</span>
+        </div>
     </div>
 </div>
 
-<style>
-.input-group-icon { position: relative; }
-.input-group-icon i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 15px; z-index: 1; }
-</style>
+@section Scripts {
+    <script>
+        // Password toggles
+        function setupToggle(buttonId, inputId, iconId) {
+            const btn = document.getElementById(buttonId);
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (btn && input && icon) {
+                btn.addEventListener('click', function() {
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.className = 'bi bi-eye-fill';
+                    } else {
+                        input.type = 'password';
+                        icon.className = 'bi bi-eye-slash-fill';
+                    }
+                });
+            }
+        }
+        setupToggle('togglePasswordBtn', 'passwordInput', 'pwdEyeIcon');
+        setupToggle('toggleConfirmPasswordBtn', 'confirmPasswordInput', 'confirmPwdEyeIcon');
+
+        // Live Password Checklist Validator
+        const pwdInput = document.getElementById('passwordInput');
+        if (pwdInput) {
+            pwdInput.addEventListener('input', function() {
+                const val = pwdInput.value;
+                updateReq('req-len', 'icon-len', val.length >= 8);
+                updateReq('req-upper', 'icon-upper', /[A-Z]/.test(val));
+                updateReq('req-digit', 'icon-digit', /[0-9]/.test(val));
+                updateReq('req-symbol', 'icon-symbol', /[^a-zA-Z0-9]/.test(val));
+            });
+        }
+
+        function updateReq(itemId, iconId, isValid) {
+            const item = document.getElementById(itemId);
+            const icon = document.getElementById(iconId);
+            if (isValid) {
+                item.classList.add('valid');
+                icon.className = 'bi bi-check-circle-fill text-success';
+            } else {
+                item.classList.remove('valid');
+                icon.className = 'bi bi-circle';
+            }
+        }
+    </script>
+}

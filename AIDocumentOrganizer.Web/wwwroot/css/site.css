@@ -845,9 +845,31 @@ a:hover { color: #a5b4fc; }
   border: 1px solid rgba(255, 255, 255, 0.12);
   backdrop-filter: blur(24px) saturate(200%);
   border-radius: var(--radius-xl);
-  padding: 44px 38px;
+  padding: 40px 36px;
   width: 100%;
-  max-width: 460px;
+  max-width: 480px;
+  box-shadow: var(--shadow-card), 0 0 35px rgba(99, 102, 241, 0.2);
+  position: relative;
+  z-index: 2;
+}
+
+/* Fallback aliases for any legacy auth markup */
+.auth-page {
+  min-height: calc(100vh - 80px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  position: relative;
+}
+.auth-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(24px) saturate(200%);
+  border-radius: var(--radius-xl);
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 480px;
   box-shadow: var(--shadow-card), 0 0 35px rgba(99, 102, 241, 0.2);
   position: relative;
   z-index: 2;
@@ -905,6 +927,10 @@ a:hover { color: #a5b4fc; }
   transition: var(--trans);
 }
 
+.form-control-modern.has-pwd-toggle {
+  padding-right: 42px;
+}
+
 .form-control-modern:focus {
   background: rgba(26, 30, 48, 0.95);
   border-color: var(--primary);
@@ -922,8 +948,50 @@ a:hover { color: #a5b4fc; }
   cursor: pointer;
   font-size: 16px;
   padding: 4px;
+  z-index: 2;
 }
 .btn-toggle-pwd:hover { color: #fff; }
+
+.password-reqs-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 14px;
+  font-size: 11px;
+}
+
+.password-req-item {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+  transition: color 0.15s ease;
+}
+
+.password-req-item.valid {
+  color: var(--success);
+}
+
+.auth-trust-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.auth-trust-pill {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
 
 .btn-demo-pill {
   background: rgba(255, 255, 255, 0.05);
