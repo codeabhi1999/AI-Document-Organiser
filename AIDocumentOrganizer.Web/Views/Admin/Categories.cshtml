@@ -1,0 +1,198 @@
+@model List<AIDocumentOrganizer.Web.ViewModels.AdminCategoryItem>
+@{
+    ViewData["Title"] = "Category Management";
+    ViewData["PageTitle"] = "Category Management";
+}
+
+<partial name="_AdminNav" />
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-1 text-white fw-bold">Document Categories</h4>
+        <p class="text-secondary small mb-0">Organize and classify AI-extracted documents with custom icons and color schemes.</p>
+    </div>
+    <button type="button" class="btn btn-primary btn-sm px-3" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+        <i class="bi bi-plus-lg me-1"></i> Add Category
+    </button>
+</div>
+
+<!-- Categories Table -->
+<div class="doc-card p-0 overflow-hidden">
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Icon Class</th>
+                    <th>Color</th>
+                    <th>Display Order</th>
+                    <th>Type</th>
+                    <th>Associated Docs</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var cat in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div style="width:34px; height:34px; border-radius:10px; background:@cat.ColorCode; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;">
+                                    <i class="bi @cat.IconClass"></i>
+                                </div>
+                                <span class="fw-bold text-white">@cat.Name</span>
+                            </div>
+                        </td>
+                        <td><code>@cat.IconClass</code></td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span style="display:inline-block; width:16px; height:16px; border-radius:4px; background:@cat.ColorCode; border:1px solid rgba(255,255,255,0.2);"></span>
+                                <span class="small text-secondary">@cat.ColorCode</span>
+                            </div>
+                        </td>
+                        <td>@cat.DisplayOrder</td>
+                        <td>
+                            @if (cat.IsSystemDefault)
+                            {
+                                <span class="badge-status badge-valid" style="font-size:10px;">System Default</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status badge-ready" style="font-size:10px;">Custom</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge bg-dark border">@cat.DocumentCount document(s)</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <!-- Edit Modal Trigger -->
+                                <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:12px; padding:3px 8px;" data-bs-toggle="modal" data-bs-target="#editCatModal-@cat.Id" title="Edit Category">
+                                    <i class="bi bi-pencil text-info"></i>
+                                </button>
+
+                                <!-- Delete Modal Trigger -->
+                                @if (!cat.IsSystemDefault)
+                                {
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:12px; padding:3px 8px;" data-bs-toggle="modal" data-bs-target="#delCatModal-@cat.Id" title="Delete Category">
+                                        <i class="bi bi-trash text-danger"></i>
+                                    </button>
+                                }
+                            </div>
+
+                            <!-- Edit Category Modal -->
+                            <div class="modal fade text-start" id="editCatModal-@cat.Id" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content" style="background:var(--bg-card-solid); border:1px solid var(--border); color:#fff;">
+                                        <div class="modal-header border-bottom border-secondary">
+                                            <h6 class="modal-title"><i class="bi bi-pencil me-2 text-info"></i>Edit Category: @cat.Name</h6>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <form asp-action="EditCategory" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Id" value="@cat.Id" />
+                                            <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Name</label>
+                                                    <input type="text" name="Name" value="@cat.Name" class="form-control" required maxlength="80" />
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Bootstrap Icon Class</label>
+                                                    <input type="text" name="IconClass" value="@cat.IconClass" class="form-control" maxlength="60" placeholder="e.g. bi-shield-check" />
+                                                    <span class="text-muted small">Reference: icons.getbootstrap.com</span>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Color Code</label>
+                                                    <div class="d-flex gap-2">
+                                                        <input type="color" class="form-control form-control-color" value="@cat.ColorCode" onchange="document.getElementById('colorInput-@cat.Id').value = this.value" />
+                                                        <input type="text" name="ColorCode" id="colorInput-@cat.Id" value="@cat.ColorCode" class="form-control" maxlength="20" />
+                                                    </div>
+                                                </div>
+                                                <div class="mb-3">
+                                                    <label class="form-label small fw-bold">Display Order</label>
+                                                    <input type="number" name="DisplayOrder" value="@cat.DisplayOrder" class="form-control" />
+                                                </div>
+                                            </div>
+                                            <div class="modal-footer border-top border-secondary">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Delete Category Modal -->
+                            @if (!cat.IsSystemDefault)
+                            {
+                                <div class="modal fade text-start" id="delCatModal-@cat.Id" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered">
+                                        <div class="modal-content" style="background:var(--bg-card-solid); border:1px solid var(--border); color:#fff;">
+                                            <div class="modal-header border-bottom border-secondary">
+                                                <h6 class="modal-title text-danger"><i class="bi bi-trash me-2"></i>Delete Category</h6>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Are you sure you want to delete the category <strong>"@cat.Name"</strong>?</p>
+                                                <p class="text-warning small mb-0"><i class="bi bi-info-circle me-1"></i>Any existing @cat.DocumentCount document(s) in this category will be reassigned to the default "Other" category.</p>
+                                            </div>
+                                            <div class="modal-footer border-top border-secondary">
+                                                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                                <form asp-action="DeleteCategory" method="post" style="display:inline;">
+                                                    @Html.AntiForgeryToken()
+                                                    <input type="hidden" name="id" value="@cat.Id" />
+                                                    <button type="submit" class="btn btn-danger btn-sm">Confirm Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Category Modal -->
+<div class="modal fade text-start" id="addCategoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--bg-card-solid); border:1px solid var(--border); color:#fff;">
+            <div class="modal-header border-bottom border-secondary">
+                <h6 class="modal-title"><i class="bi bi-plus-circle me-2 text-primary"></i>Create New Category</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CreateCategory" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Category Name</label>
+                        <input type="text" name="Name" class="form-control" required maxlength="80" placeholder="e.g. Legal & Contracts" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Bootstrap Icon Class</label>
+                        <input type="text" name="IconClass" value="bi-folder" class="form-control" maxlength="60" placeholder="e.g. bi-briefcase, bi-card-text" />
+                        <span class="text-muted small">E.g., bi-briefcase, bi-heart-pulse, bi-file-earmark-lock</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Color Code</label>
+                        <div class="d-flex gap-2">
+                            <input type="color" class="form-control form-control-color" value="#6366f1" onchange="document.getElementById('newColorCode').value = this.value" />
+                            <input type="text" name="ColorCode" id="newColorCode" value="#6366f1" class="form-control" maxlength="20" />
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Display Order</label>
+                        <input type="number" name="DisplayOrder" value="@(Model.Count + 1)" class="form-control" />
+                    </div>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-check-lg me-1"></i>Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

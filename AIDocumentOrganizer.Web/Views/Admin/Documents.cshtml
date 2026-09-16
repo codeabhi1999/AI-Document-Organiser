@@ -1,0 +1,230 @@
+@model AIDocumentOrganizer.Web.ViewModels.AdminDocumentsViewModel
+@using AIDocumentOrganizer.Web.Models.Enums
+@{
+    ViewData["Title"] = "All Documents";
+    ViewData["PageTitle"] = "All Documents Explorer";
+}
+
+<partial name="_AdminNav" />
+
+<!-- Filter Bar -->
+<div class="admin-filter-bar">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-3">
+            <div class="input-group">
+                <span class="input-group-text bg-transparent border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input type="text" name="search" value="@Model.Search" class="form-control border-start-0 ps-0" placeholder="Search title, owner, holder..." />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <select name="categoryId" class="form-select">
+                <option value="">All Categories</option>
+                @foreach (var c in Model.Categories)
+                {
+                    <option value="@c.Value" selected="@(Model.CategoryId?.ToString() == c.Value)">@c.Text</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="processingStatus" class="form-select">
+                <option value="">All Processing</option>
+                @foreach (ProcessingStatus s in Enum.GetValues(typeof(ProcessingStatus)))
+                {
+                    <option value="@s" selected="@(Model.ProcessingStatus == s)">@s</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-2">
+            <select name="expiryStatus" class="form-select">
+                <option value="">All Expiry</option>
+                @foreach (ExpiryStatus e in Enum.GetValues(typeof(ExpiryStatus)))
+                {
+                    <option value="@e" selected="@(Model.ExpiryStatus == e)">@e</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button type="submit" class="btn btn-primary btn-sm flex-fill"><i class="bi bi-funnel me-1"></i> Filter</button>
+            <a asp-action="Documents" class="btn btn-outline-secondary btn-sm" title="Clear Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+            <a asp-action="ExportDocuments" class="btn btn-outline-secondary btn-sm" title="Export CSV"><i class="bi bi-download me-1"></i>CSV</a>
+        </div>
+    </form>
+</div>
+
+<!-- Documents List -->
+<div class="doc-card p-0 overflow-hidden">
+    <div class="p-3 d-flex justify-content-between align-items-center" style="border-bottom:1px solid var(--border);">
+        <h5 class="mb-0 fw-600" style="font-size:15px;">
+            <i class="bi bi-folder2-open me-2 text-primary"></i>System Documents (@Model.TotalCount total)
+        </h5>
+        <span class="text-muted small">Page @Model.Page of @(Math.Max(1, Model.TotalPages))</span>
+    </div>
+    <div class="table-responsive">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th>Document</th>
+                    <th>Owner</th>
+                    <th>Category</th>
+                    <th>AI Status</th>
+                    <th>Expiry</th>
+                    <th>Size</th>
+                    <th>Created</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Documents.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-folder-x fs-2 d-block mb-2 text-secondary"></i>
+                            No documents match your query filters.
+                        </td>
+                    </tr>
+                }
+                @foreach (var doc in Model.Documents)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="doc-type-icon" style="width:36px; height:36px; font-size:16px; background:@(doc.CategoryColor ?? "#4361ee")20; color:@(doc.CategoryColor ?? "#4361ee");">
+                                    <i class="bi @(doc.CategoryIcon ?? "bi-file-earmark-text")"></i>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white" style="font-size:13px;">@doc.Title</div>
+                                    <div class="text-muted small">
+                                        @(string.IsNullOrEmpty(doc.DocumentType) ? "Document" : doc.DocumentType)
+                                        @if (!string.IsNullOrEmpty(doc.HolderName))
+                                        {
+                                            <span>• @doc.HolderName</span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="font-size:13px; color:var(--text-primary);">@doc.OwnerName</div>
+                            <div style="font-size:11px; color:var(--text-muted);">@doc.OwnerEmail</div>
+                        </td>
+                        <td>
+                            <span class="badge" style="background:@(doc.CategoryColor ?? "#6c757d")25; color:@(doc.CategoryColor ?? "#fff"); border:1px solid @(doc.CategoryColor ?? "#6c757d")40;">
+                                <i class="bi @(doc.CategoryIcon ?? "bi-folder") me-1"></i>@doc.CategoryName
+                            </span>
+                        </td>
+                        <td>
+                            @switch (doc.ProcessingStatus)
+                            {
+                                case ProcessingStatus.Completed:
+                                    <span class="badge-status badge-valid"><i class="bi bi-check-circle"></i> Ready</span>
+                                    break;
+                                case ProcessingStatus.Processing:
+                                    <span class="badge-status badge-processing"><i class="bi bi-arrow-repeat spin"></i> Processing</span>
+                                    break;
+                                case ProcessingStatus.Failed:
+                                    <span class="badge-status badge-failed"><i class="bi bi-exclamation-triangle"></i> Failed</span>
+                                    break;
+                                default:
+                                    <span class="badge-status badge-review"><i class="bi bi-clock"></i> Pending</span>
+                                    break;
+                            }
+                        </td>
+                        <td>
+                            @switch (doc.ExpiryStatus)
+                            {
+                                case ExpiryStatus.Expired:
+                                    <span class="badge-status badge-expired"><i class="bi bi-x-circle"></i> Expired</span>
+                                    break;
+                                case ExpiryStatus.ExpiringSoon:
+                                    <span class="badge-status badge-expiring"><i class="bi bi-clock-history"></i> Soon</span>
+                                    break;
+                                case ExpiryStatus.Lifetime:
+                                    <span class="badge-status badge-lifetime"><i class="bi bi-infinity"></i> Lifetime</span>
+                                    break;
+                                default:
+                                    <span class="badge-status badge-valid"><i class="bi bi-check2"></i> Valid</span>
+                                    break;
+                            }
+                            @if (doc.ExpiryDate.HasValue)
+                            {
+                                <div class="text-muted" style="font-size:11px;">@doc.ExpiryDate.Value.ToString("dd MMM yyyy")</div>
+                            }
+                        </td>
+                        <td style="font-size:12px; color:var(--text-secondary);">@FormatBytes(doc.FileSizeBytes)</td>
+                        <td style="font-size:12px; color:var(--text-secondary);">@doc.CreatedAt.ToString("dd MMM yyyy")</td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-1">
+                                <!-- Re-trigger AI Processing -->
+                                <form asp-action="ReprocessDocument" method="post" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="documentId" value="@doc.Id" />
+                                    <button type="submit" class="btn btn-outline-secondary btn-sm" style="font-size:12px; padding:3px 8px;" title="Re-trigger AI OCR & Extraction">
+                                        <i class="bi bi-arrow-repeat text-info"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Delete Document Modal Button -->
+                                <button type="button" class="btn btn-outline-secondary btn-sm" style="font-size:12px; padding:3px 8px;" data-bs-toggle="modal" data-bs-target="#deleteDocModal-@doc.Id" title="Admin Delete Document">
+                                    <i class="bi bi-trash text-danger"></i>
+                                </button>
+                            </div>
+
+                            <!-- Delete Modal -->
+                            <div class="modal fade text-start" id="deleteDocModal-@doc.Id" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-content" style="background:var(--bg-card-solid); border:1px solid var(--border); color:#fff;">
+                                        <div class="modal-header border-bottom border-secondary">
+                                            <h6 class="modal-title"><i class="bi bi-exclamation-triangle text-danger me-2"></i>Delete Document</h6>
+                                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>Are you sure you want to permanently delete document <strong>"@doc.Title"</strong> owned by <strong>@doc.OwnerName</strong> (@doc.OwnerEmail)?</p>
+                                            <p class="text-danger small mb-0"><i class="bi bi-info-circle me-1"></i>This will erase all versions, reminders, and extracted texts physically and from the database.</p>
+                                        </div>
+                                        <div class="modal-footer border-top border-secondary">
+                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                                            <form asp-action="DeleteDocument" method="post" style="display:inline;">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="documentId" value="@doc.Id" />
+                                                <button type="submit" class="btn btn-danger btn-sm"><i class="bi bi-trash me-1"></i>Permanently Delete</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+@if (Model.TotalPages > 1)
+{
+    <nav class="mt-4 d-flex justify-content-center">
+        <ul class="pagination">
+            @for (var p = 1; p <= Model.TotalPages; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" asp-action="Documents"
+                       asp-route-page="@p"
+                       asp-route-search="@Model.Search"
+                       asp-route-categoryId="@Model.CategoryId"
+                       asp-route-processingStatus="@Model.ProcessingStatus"
+                       asp-route-expiryStatus="@Model.ExpiryStatus">@p</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
+
+@functions {
+    static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024.0).ToString("0.0") + " KB";
+        return (bytes / 1048576.0).ToString("0.0") + " MB";
+    }
+}

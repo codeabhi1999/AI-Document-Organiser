@@ -230,6 +230,130 @@ public class AdminAiLogItem
     public DateTime ProcessedAt { get; set; }
 }
 
+public class AdminCategoryItem
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string IconClass { get; set; } = "bi-folder";
+    public string ColorCode { get; set; } = "#6c757d";
+    public int DisplayOrder { get; set; }
+    public bool IsSystemDefault { get; set; }
+    public int DocumentCount { get; set; }
+}
+
+public class AdminCategoryEditViewModel
+{
+    public int Id { get; set; }
+
+    [Required, MaxLength(80)]
+    public string Name { get; set; } = string.Empty;
+
+    [MaxLength(60)]
+    public string IconClass { get; set; } = "bi-folder";
+
+    [MaxLength(20)]
+    public string ColorCode { get; set; } = "#4361ee";
+
+    public int DisplayOrder { get; set; } = 1;
+}
+
+public class AdminDocumentsViewModel
+{
+    public string? Search { get; set; }
+    public int? CategoryId { get; set; }
+    public ProcessingStatus? ProcessingStatus { get; set; }
+    public ExpiryStatus? ExpiryStatus { get; set; }
+    public int Page { get; set; } = 1;
+    public int TotalPages { get; set; }
+    public int TotalCount { get; set; }
+    public List<SelectListItem> Categories { get; set; } = new();
+    public List<AdminDocumentItem> Documents { get; set; } = new();
+}
+
+public class AdminDocumentItem
+{
+    public Guid Id { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string DocumentType { get; set; } = string.Empty;
+    public string? DocumentNumberMasked { get; set; }
+    public string? HolderName { get; set; }
+    public string? CategoryName { get; set; }
+    public string? CategoryColor { get; set; }
+    public string? CategoryIcon { get; set; }
+    public long FileSizeBytes { get; set; }
+    public ProcessingStatus ProcessingStatus { get; set; }
+    public ExpiryStatus ExpiryStatus { get; set; }
+    public DateTime? ExpiryDate { get; set; }
+    public string OwnerName { get; set; } = string.Empty;
+    public string OwnerEmail { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public int VersionCount { get; set; }
+}
+
+public class AdminSystemHealthViewModel
+{
+    public string DotNetVersion { get; set; } = string.Empty;
+    public string OsDescription { get; set; } = string.Empty;
+    public string MachineName { get; set; } = string.Empty;
+    public DateTime ServerTimeUtc { get; set; }
+    public string EnvironmentName { get; set; } = string.Empty;
+
+    public long TotalStorageBytes { get; set; }
+    public long PhysicalStorageBytes { get; set; }
+    public int TotalVersions { get; set; }
+    public int MaxFileSizeMB { get; set; }
+    public string[] AllowedExtensions { get; set; } = Array.Empty<string>();
+
+    public string GeminiModel { get; set; } = string.Empty;
+    public bool HasApiKey { get; set; }
+    public int TotalAiRequests { get; set; }
+    public int SuccessfulAiRequests { get; set; }
+    public int FailedAiRequests { get; set; }
+    public int TotalAiTokens { get; set; }
+
+    public int TotalUsers { get; set; }
+    public int TotalDocuments { get; set; }
+    public int TotalCategories { get; set; }
+    public int TotalReminders { get; set; }
+    public int TotalAuditLogs { get; set; }
+    public int TotalNotifications { get; set; }
+}
+
+public class AdminBroadcastViewModel
+{
+    [Required, MaxLength(150)]
+    public string Title { get; set; } = string.Empty;
+
+    [Required, MaxLength(1000)]
+    public string Message { get; set; } = string.Empty;
+
+    [MaxLength(30)]
+    public string Type { get; set; } = "Info"; // Info, Warning, Danger, Success
+
+    public List<AdminBroadcastItem> RecentBroadcasts { get; set; } = new();
+}
+
+public class AdminBroadcastItem
+{
+    public string Title { get; set; } = string.Empty;
+    public string Message { get; set; } = string.Empty;
+    public string Type { get; set; } = "Info";
+    public DateTime CreatedAt { get; set; }
+    public int RecipientCount { get; set; }
+}
+
+public class AdminUsersViewModel
+{
+    public string? Search { get; set; }
+    public string? RoleFilter { get; set; }
+    public string? StatusFilter { get; set; }
+    public int TotalUsers { get; set; }
+    public int ActiveUsers { get; set; }
+    public int InactiveUsers { get; set; }
+    public int AdminCount { get; set; }
+    public List<AdminUserItem> Users { get; set; } = new();
+}
+
 public class NotificationViewModel
 {
     public List<NotificationItem> Notifications { get; set; } = new();
@@ -247,3 +371,4 @@ public class NotificationItem
     public string? DocumentTitle { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+

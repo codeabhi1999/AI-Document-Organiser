@@ -1,0 +1,30 @@
+@{
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+}
+
+<div class="admin-nav-wrapper">
+    <a asp-controller="Admin" asp-action="Index" class="admin-nav-link @(currentAction == "Index" ? "active" : "")">
+        <i class="bi bi-grid-1x2"></i> Dashboard
+    </a>
+    <a asp-controller="Admin" asp-action="Users" class="admin-nav-link @(currentAction == "Users" ? "active" : "")">
+        <i class="bi bi-people"></i> Users
+    </a>
+    <a asp-controller="Admin" asp-action="Documents" class="admin-nav-link @(currentAction == "Documents" ? "active" : "")">
+        <i class="bi bi-folder2-open"></i> All Documents
+    </a>
+    <a asp-controller="Admin" asp-action="Categories" class="admin-nav-link @(currentAction == "Categories" ? "active" : "")">
+        <i class="bi bi-tags"></i> Categories
+    </a>
+    <a asp-controller="Admin" asp-action="SystemHealth" class="admin-nav-link @(currentAction == "SystemHealth" ? "active" : "")">
+        <i class="bi bi-heart-pulse"></i> System Health
+    </a>
+    <a asp-controller="Admin" asp-action="Broadcast" class="admin-nav-link @(currentAction == "Broadcast" ? "active" : "")">
+        <i class="bi bi-megaphone"></i> Broadcast
+    </a>
+    <a asp-controller="Admin" asp-action="AuditLogs" class="admin-nav-link @(currentAction == "AuditLogs" ? "active" : "")">
+        <i class="bi bi-list-check"></i> Audit Logs
+    </a>
+    <a asp-controller="Admin" asp-action="AiLogs" class="admin-nav-link @(currentAction == "AiLogs" ? "active" : "")">
+        <i class="bi bi-cpu"></i> AI Logs
+    </a>
+</div>

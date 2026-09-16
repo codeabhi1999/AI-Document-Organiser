@@ -1,0 +1,277 @@
+@model AIDocumentOrganizer.Web.ViewModels.AdminSystemHealthViewModel
+@{
+    ViewData["Title"] = "System Health & Maintenance";
+    ViewData["PageTitle"] = "System Health & Maintenance";
+    var aiSuccessRate = Model.TotalAiRequests > 0
+        ? (int)Math.Round((double)Model.SuccessfulAiRequests / Model.TotalAiRequests * 100)
+        : 100;
+}
+
+<partial name="_AdminNav" />
+
+<!-- Action Bar / Maintenance Triggers -->
+<div class="doc-card mb-4 p-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+        <div>
+            <h5 class="fw-bold text-white mb-1"><i class="bi bi-tools text-primary me-2"></i>Maintenance Operations</h5>
+            <p class="text-secondary small mb-0">Run critical system routines, recalculate statuses, retry failed AI pipelines, or purge historical logs.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <!-- Trigger Expiry Check -->
+            <form asp-action="TriggerExpiryCheck" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-info btn-sm">
+                    <i class="bi bi-clock-history me-1"></i> Run Expiry Check
+                </button>
+            </form>
+
+            <!-- Retry Failed AI Jobs -->
+            <form asp-action="RetryFailedAiJobs" method="post" style="display:inline;">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-outline-warning btn-sm">
+                    <i class="bi bi-arrow-repeat me-1"></i> Retry Failed AI Jobs
+                </button>
+            </form>
+
+            <!-- Purge Old Logs Modal Trigger -->
+            <button type="button" class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#purgeLogsModal">
+                <i class="bi bi-trash3 me-1"></i> Purge Old Logs
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Diagnostics Grid -->
+<div class="row g-4">
+    <!-- Server & Environment Card -->
+    <div class="col-lg-6">
+        <div class="doc-card h-100">
+            <h5 class="fw-600 mb-3" style="font-size:15px;">
+                <i class="bi bi-hdd-network me-2 text-primary"></i>Server & Runtime Environment
+            </h5>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Framework</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.DotNetVersion</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Environment</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        <span class="badge @(Model.EnvironmentName == "Development" ? "bg-warning text-dark" : "bg-success")">
+                            @Model.EnvironmentName
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Operating System</div>
+                    <div class="detail-value text-truncate" style="font-size:14px;" title="@Model.OsDescription">@Model.OsDescription</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Host Machine</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.MachineName</div>
+                </div>
+            </div>
+            <div class="detail-row mb-0">
+                <div class="detail-item">
+                    <div class="detail-label">Server UTC Time</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.ServerTimeUtc.ToString("yyyy-MM-dd HH:mm:ss") UTC</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        <span class="badge-status badge-valid"><i class="bi bi-circle-fill" style="font-size:8px;"></i> Online</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI Service Performance Card -->
+    <div class="col-lg-6">
+        <div class="doc-card h-100">
+            <h5 class="fw-600 mb-3" style="font-size:15px;">
+                <i class="bi bi-cpu me-2 text-info"></i>AI Engine Performance & Status
+            </h5>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">AI Model</div>
+                    <div class="detail-value" style="font-size:14px;"><code>@Model.GeminiModel</code></div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">API Key Status</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        @if (Model.HasApiKey)
+                        {
+                            <span class="badge-status badge-valid"><i class="bi bi-key-fill"></i> Configured</span>
+                        }
+                        else
+                        {
+                            <span class="badge-status badge-failed"><i class="bi bi-exclamation-triangle"></i> Missing Key</span>
+                        }
+                    </div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Success Rate</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        <span class="text-@(aiSuccessRate >= 90 ? "success" : "warning") fw-bold">@aiSuccessRate%</span>
+                        <span class="text-muted small ms-1">(@Model.SuccessfulAiRequests / @Model.TotalAiRequests OK)</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Tokens Consumed</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.TotalAiTokens.ToString("N0")</div>
+                </div>
+            </div>
+            <div class="detail-row mb-0">
+                <div class="detail-item">
+                    <div class="detail-label">Failed Requests</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        <span class="badge @(Model.FailedAiRequests > 0 ? "bg-danger" : "bg-success")">@Model.FailedAiRequests</span>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">AI Health</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        <span class="badge-status @(Model.HasApiKey ? "badge-valid" : "badge-failed")">
+                            @(Model.HasApiKey ? "Ready for Extraction" : "Action Required")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Storage Diagnostics Card -->
+    <div class="col-lg-6">
+        <div class="doc-card h-100">
+            <h5 class="fw-600 mb-3" style="font-size:15px;">
+                <i class="bi bi-hdd me-2 text-warning"></i>Storage & File Vault
+            </h5>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Tracked File Bytes</div>
+                    <div class="detail-value" style="font-size:14px;">@FormatBytes(Model.TotalStorageBytes)</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Physical Directory Size</div>
+                    <div class="detail-value" style="font-size:14px;">@FormatBytes(Model.PhysicalStorageBytes)</div>
+                </div>
+            </div>
+            <div class="detail-row">
+                <div class="detail-item">
+                    <div class="detail-label">Total Document Versions</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.TotalVersions files</div>
+                </div>
+                <div class="detail-item">
+                    <div class="detail-label">Max File Size Limit</div>
+                    <div class="detail-value" style="font-size:14px;">@Model.MaxFileSizeMB MB per upload</div>
+                </div>
+            </div>
+            <div class="detail-row mb-0">
+                <div class="detail-item">
+                    <div class="detail-label">Permitted Extensions</div>
+                    <div class="detail-value" style="font-size:14px;">
+                        @foreach (var ext in Model.AllowedExtensions)
+                        {
+                            <span class="badge bg-dark border me-1">@ext</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Database Entity Summary Card -->
+    <div class="col-lg-6">
+        <div class="doc-card h-100">
+            <h5 class="fw-600 mb-3" style="font-size:15px;">
+                <i class="bi bi-database me-2 text-success"></i>Database Entity Inventory
+            </h5>
+            <div class="row g-2">
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Users</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalUsers</div>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Documents</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalDocuments</div>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Categories</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalCategories</div>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Reminders</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalReminders</div>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Audit Logs</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalAuditLogs</div>
+                    </div>
+                </div>
+                <div class="col-6 col-sm-4">
+                    <div class="p-2 border rounded" style="background:rgba(255,255,255,0.02);">
+                        <div class="small text-muted">Notifications</div>
+                        <div class="fw-bold fs-5 text-white">@Model.TotalNotifications</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Purge Old Logs Modal -->
+<div class="modal fade" id="purgeLogsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background:var(--bg-card-solid); border:1px solid var(--border); color:#fff;">
+            <div class="modal-header border-bottom border-secondary">
+                <h6 class="modal-title text-danger"><i class="bi bi-trash3 me-2"></i>Purge Historical Audit Logs</h6>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="PurgeOldAuditLogs" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <p>Clean up older audit log records to reclaim database storage.</p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Purge logs older than:</label>
+                        <select name="daysOld" class="form-select">
+                            <option value="30">30 days</option>
+                            <option value="60">60 days</option>
+                            <option value="90" selected>90 days (Recommended)</option>
+                            <option value="180">180 days</option>
+                            <option value="365">1 year</option>
+                        </select>
+                    </div>
+                    <p class="text-danger small mb-0"><i class="bi bi-exclamation-triangle me-1"></i>This action is irreversible.</p>
+                </div>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger btn-sm">Confirm Purge</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@functions {
+    static string FormatBytes(long bytes)
+    {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1048576) return (bytes / 1024.0).ToString("0.0") + " KB";
+        if (bytes < 1073741824) return (bytes / 1048576.0).ToString("0.0") + " MB";
+        return (bytes / 1073741824.0).ToString("0.00") + " GB";
+    }
+}

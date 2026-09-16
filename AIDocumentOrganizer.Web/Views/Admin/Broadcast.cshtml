@@ -1,0 +1,131 @@
+@model AIDocumentOrganizer.Web.ViewModels.AdminBroadcastViewModel
+@{
+    ViewData["Title"] = "Broadcast System Notification";
+    ViewData["PageTitle"] = "System Broadcast Announcements";
+}
+
+<partial name="_AdminNav" />
+
+<div class="row g-4">
+    <!-- Broadcast Composer Form -->
+    <div class="col-lg-6">
+        <div class="doc-card">
+            <h5 class="fw-600 mb-3" style="font-size:16px;">
+                <i class="bi bi-megaphone me-2 text-primary"></i>Compose System Announcement
+            </h5>
+            <p class="text-secondary small mb-4">Send an instant in-app notification to all active registered users across DocVault.</p>
+
+            <form asp-action="SendBroadcast" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Notification Title</label>
+                    <input type="text" asp-for="Title" class="form-control" placeholder="e.g. Scheduled System Upgrade at 2 AM UTC" required maxlength="150" id="broadcastTitleInput" />
+                    <span asp-validation-for="Title" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Notification Type</label>
+                    <select asp-for="Type" class="form-select" id="broadcastTypeSelect">
+                        <option value="Info">ℹ️ Informational (Blue)</option>
+                        <option value="Success">✅ Success / Milestone (Green)</option>
+                        <option value="Warning">⚠️ Warning / Maintenance (Amber)</option>
+                        <option value="Danger">🚨 Critical Alert (Red)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label small fw-bold">Announcement Message</label>
+                    <textarea asp-for="Message" class="form-control" rows="4" placeholder="Detail the update, new features, or instructions for users..." required maxlength="1000" id="broadcastMsgInput"></textarea>
+                    <span asp-validation-for="Message" class="text-danger small"></span>
+                </div>
+
+                <!-- Live User Preview -->
+                <div class="mb-4 p-3 border rounded" style="background:rgba(255,255,255,0.02);">
+                    <div class="small text-muted fw-bold text-uppercase mb-2">User Inbox Preview</div>
+                    <div class="p-3 rounded border" id="previewContainer" style="background:var(--bg-card); border-left: 4px solid var(--info) !important;">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <h6 class="mb-0 fw-bold text-white fs-6" id="previewTitle">Notification Title</h6>
+                            <span class="badge bg-secondary" id="previewBadge" style="font-size:10px;">Info</span>
+                        </div>
+                        <p class="mb-0 text-secondary small" id="previewMsg">Your message will appear here in the user's notifications panel.</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                    <i class="bi bi-send me-2"></i>Dispatch Broadcast to All Active Users
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recent Broadcasts History -->
+    <div class="col-lg-6">
+        <div class="doc-card p-0 overflow-hidden">
+            <div class="p-3" style="border-bottom:1px solid var(--border);">
+                <h5 class="mb-0 fw-600" style="font-size:15px;">
+                    <i class="bi bi-clock-history me-2 text-info"></i>Broadcast History
+                </h5>
+            </div>
+            @if (!Model.RecentBroadcasts.Any())
+            {
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-broadcast fs-3 d-block mb-2"></i>
+                    No previous broadcasts recorded.
+                </div>
+            }
+            else
+            {
+                <div class="list-group list-group-flush" style="background:transparent;">
+                    @foreach (var b in Model.RecentBroadcasts)
+                    {
+                        <div class="list-group-item p-3" style="background:transparent; border-bottom:1px solid var(--border);">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <span class="fw-bold text-white fs-6">@b.Title</span>
+                                <span class="badge-status @(b.Type == "Warning" ? "badge-expiring" : b.Type == "Danger" ? "badge-failed" : "badge-ready")" style="font-size:10px;">
+                                    @b.Type
+                                </span>
+                            </div>
+                            <p class="text-secondary small mb-2">@b.Message</p>
+                            <div class="d-flex justify-content-between text-muted" style="font-size:11px;">
+                                <span><i class="bi bi-people me-1"></i>Delivered to @b.RecipientCount user(s)</span>
+                                <span><i class="bi bi-clock me-1"></i>@b.CreatedAt.ToString("dd MMM yyyy HH:mm")</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    const titleInput = document.getElementById('broadcastTitleInput');
+    const msgInput = document.getElementById('broadcastMsgInput');
+    const typeSelect = document.getElementById('broadcastTypeSelect');
+    const previewTitle = document.getElementById('previewTitle');
+    const previewMsg = document.getElementById('previewMsg');
+    const previewBadge = document.getElementById('previewBadge');
+    const previewContainer = document.getElementById('previewContainer');
+
+    function updatePreview() {
+        previewTitle.textContent = titleInput.value.trim() || 'Notification Title';
+        previewMsg.textContent = msgInput.value.trim() || "Your message will appear here in the user's notifications panel.";
+        const type = typeSelect.value;
+        previewBadge.textContent = type;
+
+        let borderLeftColor = 'var(--info)';
+        if (type === 'Success') borderLeftColor = 'var(--success)';
+        else if (type === 'Warning') borderLeftColor = 'var(--warning)';
+        else if (type === 'Danger') borderLeftColor = 'var(--danger)';
+
+        previewContainer.style.borderLeft = `4px solid ${borderLeftColor}`;
+    }
+
+    titleInput.addEventListener('input', updatePreview);
+    msgInput.addEventListener('input', updatePreview);
+    typeSelect.addEventListener('change', updatePreview);
+    updatePreview();
+</script>
+}
